@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 # ------------
 # Install a given script to given install path
 #
@@ -45,8 +43,6 @@ installApp()
     return 0
 }
 
-
-
 # ------------
 # Remove a given script from given install path
 #
@@ -76,8 +72,6 @@ removeApp()
     return 0
 }
 
-
-
 # ------------
 # Gets the name of environment. Possible values are:
 # - prod    (production)
@@ -106,5 +100,40 @@ getEnvironment()
     return 0
 }
 
+# ------------
+# Checks if the given ip is pingable.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-02-26
+# ------------
+isPingable ()
+{
+    ip="$1"
 
+    if ping -c 1 $ip &> /dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# ------------
+# Checks if the given port on given ip is open.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-02-26
+# ------------
+isPortOpen ()
+{
+    ip="$1"
+    port="$2"
+
+    if (echo >/dev/tcp/$ip/$port) &>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
 
