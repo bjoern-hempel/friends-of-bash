@@ -1,0 +1,25 @@
+#!/bin/bash
+
+
+
+# ------------
+# Check if item is inside the given array
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+inArray ()
+{
+  local haystack=${1}[@]
+  local needle=${2}
+  local i
+  for i in ${!haystack}; do
+    if [[ ${i} == ${needle} ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+
+

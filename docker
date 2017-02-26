@@ -1,0 +1,665 @@
+#!/bin/bash
+
+
+
+# ------------
+# Get container status
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerStatus ()
+{
+    local containerName="$1"
+
+    # get status (created, restarting, running, paused, exited, dead)
+    local statusContainer=$(docker inspect -f '{{ .State.Status }}' "$containerName" 2>/dev/null)
+
+    if [ "$statusContainer" == "" ]; then
+        statusContainer="nonexistent"
+    fi
+
+    echo "$statusContainer"
+}
+
+
+
+# ------------
+# Get container id
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerId ()
+{
+    local containerName="$1"
+
+    local id=$(docker inspect -f '{{ .ID }}' "$containerName" 2>/dev/null)
+
+    if [ "$id" == "" ]; then
+        id="none"
+    else
+        id="${id:0:12}"
+    fi
+
+    echo "$id"
+}
+
+
+
+# ------------
+# Get container name
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerName ()
+{
+    local containerName="$1"
+
+    local name=$(docker inspect -f '{{ .Name }}' "$containerName" 2>/dev/null)
+
+    if [ "$name" == "" ]; then
+        name="none"
+    fi
+
+    echo "${name/\//}"
+}
+
+
+
+# ------------
+# Get container ip
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerIp ()
+{
+    local containerName="$1"
+
+    local ip=$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' "$containerName" 2>/dev/null)
+
+    if [ "$ip" == "" ]; then
+        ip="0.0.0.0"
+    fi
+
+    echo $ip
+}
+
+
+
+# ------------
+# Get container created at
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerCreatedAt ()
+{
+    local containerName="$1"
+    local format="${2:-%d %B of %Y at %H:%M and %S seconds}"
+
+    local createdAt=$(docker inspect -f '{{ .Created }}' "$containerName" 2>/dev/null)
+
+    if [ "$createdAt" == "" ]; then
+        createdAt="none"
+    else
+        createdAt=$(date --date="$createdAt" "+$format")
+    fi
+
+    echo $createdAt
+}
+
+
+
+# ------------
+# Get docker started at
+#      
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerStartedAt ()
+{
+    local containerName="$1"
+    local format="${2:-%d %B of %Y at %H:%M and %S seconds}"
+
+    local startedAt=$(docker inspect -f '{{ .State.StartedAt }}' "$containerName" 2>/dev/null)
+
+    if [ "$startedAt" == "" ]; then
+        startedAt="none"
+    else
+        startedAt=$(date --date="$startedAt" "+$format")
+    fi
+
+    echo $startedAt
+}
+
+
+
+# ------------
+# Get docker start script
+#      
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerStartScript ()
+{
+    local containerName="$1"
+
+    local startScript=$(docker inspect -f '{{ .Path }}' "$containerName" 2>/dev/null)
+
+    if [ "$startScript" == "" ]; then
+        startScript="none"
+    fi
+
+    echo $startScript
+}
+
+
+
+# ------------
+# Get docker ports
+#
+# returns:
+# --------
+# [hostPort1] [dockerPort1]\n
+# [hostPort2] [dockerPort2]\n
+# [hostPort3] [dockerPort3]
+#
+# usage:
+# ------
+# local ports=$(getDockerPorts "$containerName")
+# while read -r port; do
+#     local port=($port)
+#     echo "host-port: ${port[0]} container-port: ${port[1]}"
+# done <<< "$ports"
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------ 
+getDockerContainerPorts ()
+{
+    local containerName="$1"
+
+    local ports=$(docker inspect -f '{{range $p, $conf := .HostConfig.PortBindings}}{{(index $conf 0).HostPort}} {{$p}}'$'\n''{{end}}' "$containerName" 2>/dev/null)
+
+    echo -en "$ports"
+}
+
+
+
+# ------------
+# Get docker volume mounts
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------
+getDockerContainerVolumes ()
+{
+    local containerName="$1"
+
+    local volumes=$(docker inspect -f '{{range .HostConfig.Binds}}{{.}}'$'\n''{{end}}' "$containerName" 2>/dev/null)
+
+    echo -en "${volumes//:/ }"
+}
+
+
+
+# ------------
+# Formats the status code
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-09
+# ------------
+formatStatus()
+{
+    local statusContainer="$1"
+
+    local length=${#statusContainer}
+    local addLength=$((12-$length))
+
+    local statusContainerReal=$statusContainer
+    statusContainer="$statusContainer"$(eval "printf ' %.0s' {1..$addLength}")
+
+    case "$statusContainerReal" in
+        running)
+            statusContainer="${COLOR_BOLD}${COLOR_LGREEN}[ $statusContainer]${COLOR_NORM}"
+            ;;
+
+        created)
+            statusContainer="${COLOR_BOLD}${COLOR_LYELLOW}[ ${COLOR_BLINK}$statusContainer${COLOR_NORM}${COLOR_BOLD}${COLOR_LYELLOW}]${COLOR_NORM}"
+            ;;
+
+        restarting)
+            statusContainer="${COLOR_BOLD}${COLOR_LYELLOW}[ $statusContainer]${COLOR_NORM}"
+            ;;
+
+        paused)
+            statusContainer="${COLOR_BOLD}${COLOR_LYELLOW}[ ${COLOR_BLINK}$statusContainer${COLOR_NORM}${COLOR_BOLD}${COLOR_LYELLOW}]${COLOR_NORM}"
+            ;;
+
+        exited)
+            statusContainer="${COLOR_BOLD}${COLOR_LRED}[ ${COLOR_BLINK}$statusContainer${COLOR_NORM}${COLOR_BOLD}${COLOR_LRED}]${COLOR_NORM}"
+            ;;
+
+        dead)
+            statusContainer="${COLOR_BOLD}${COLOR_LRED}[ ${COLOR_BLINK}$statusContainer${COLOR_NORM}${COLOR_BOLD}${COLOR_LRED}]${COLOR_NORM}"
+            ;;
+
+        nonexistent)
+            statusContainer="${COLOR_BOLD}${COLOR_LRED}[ ${COLOR_BLINK}$statusContainer${COLOR_NORM}${COLOR_BOLD}${COLOR_LRED}]${COLOR_NORM}"
+            ;;
+    esac
+
+    echo -n "$statusContainer"
+}
+
+
+
+
+# ------------
+# Returns the container status
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-05
+# ------------
+getDockerContainerInfo ()
+{
+    local containerName="$1"
+    local full=${2:-false}
+    local fullReally=${2:-false}
+    local json=${3:-false}
+    local prefix="${4:-}"
+
+    # get status (created, restarting, running, paused, exited, dead)
+    local statusContainer=$(getDockerContainerStatus "$containerName")
+
+    # if container is not existent, full is not available
+    [ "$statusContainer" == "nonexistent" ] && full=false
+
+    # simply return the status
+    if ! $full; then
+        if $json; then
+            echo "{"
+            echo "$prefix    \"status\": \"$statusContainer\""
+            echo "$prefix}"
+            return 0
+        else
+            if $fullReally; then
+                statusContainer=$(formatStatus "$statusContainer")
+
+                echo "${prefix}${COLOR_BOLD}${COLOR_LBLUE}status:        ${COLOR_NORM} $statusContainer" && return 0
+            else
+                echo "$statusContainer" && return 0
+            fi
+        fi
+    fi
+
+    # build the full output
+    local                 id=$(getDockerContainerId          "$containerName")
+    local               name=$(getDockerContainerName        "$containerName")
+    local                 ip=$(getDockerContainerIp          "$containerName")
+    local          createdAt=$(getDockerContainerStartedAt   "$containerName")
+    local createdAtTimestamp=$(getDockerContainerStartedAt   "$containerName" "%s")
+    local          startedAt=$(getDockerContainerCreatedAt   "$containerName")
+    local startedAtTimestamp=$(getDockerContainerCreatedAt   "$containerName" "%s")
+    local        startScript=$(getDockerContainerStartScript "$containerName")
+    local              ports=$(getDockerContainerPorts       "$containerName")
+    local            volumes=$(getDockerContainerVolumes     "$containerName")
+
+    # print full json status of container
+    if $json; then
+        echo    "{"
+        echo    "$prefix    \"container-name\":       \"$name\","
+        echo    "$prefix    \"container-id\":         \"$id\","
+        echo    "$prefix    \"status\":               \"$statusContainer\","
+        echo    "$prefix    \"created-at\":           \"$createdAt\","
+        echo    "$prefix    \"created-at-timestamp\": \"$createdAtTimestamp\","
+        echo    "$prefix    \"started-at\":           \"$startedAt\","
+        echo    "$prefix    \"started-at-timestamp\": \"$startedAtTimestamp\","
+        echo    "$prefix    \"ip-address\":           \"$ip\","
+
+        echo -n "$prefix    \"used-ports\":           {"
+        if [ "$ports" != "" ]; then
+            local firstPort=true
+            while read -r port; do
+                local port=($port)
+                $firstPort && echo "" || echo ","
+                echo -n "$prefix                                \"${port[0]}\": \"${port[1]}\""
+                firstPort=false
+            done <<< "$ports"
+            echo -e "\n$prefix                            },"
+        else
+            echo "$prefix},"
+        fi
+
+        echo -n "$prefix    \"used-volumes\":         {"
+        if [ "$volumes" != "" ]; then
+            local firstVolume=true
+            while read -r volume; do
+                local volume=($volume)
+                $firstVolume && echo "" || echo ","
+                echo -n "$prefix                                \"${volume[0]}\": \"${volume[1]}\""
+                firstVolume=false
+            done <<< "$volumes"
+            echo -e "\n$prefix                            },"
+        else
+            echo "$prefix},"
+        fi
+        echo "$prefix    \"start-script\":         \"$startScript\","
+        echo "$prefix    \"login-command\":        \"$ docker exec -it $name bash\""
+        echo "$prefix}"
+        return 0
+    fi
+
+    statusContainer=$(formatStatus "$statusContainer")
+
+    # print full output
+             output="${prefix}${COLOR_BOLD}${COLOR_LBLUE}container name:${COLOR_NORM} $name"
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}container id:  ${COLOR_NORM} $id"
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}status:        ${COLOR_NORM} $statusContainer"
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}created at:    ${COLOR_NORM} $createdAt"
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}started at:    ${COLOR_NORM} $startedAt"
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}ip address:    ${COLOR_NORM} $ip"
+
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}used ports:    ${COLOR_NORM} "
+    if [ "$ports" != "" ]; then
+        local firstPort=true
+        while read -r port; do
+            local port=($port)
+            ! $firstPort && output="$output\n${prefix}                "
+            output="$output- ${port[0]} -> ${port[1]}"
+            firstPort=false
+        done <<< "$ports"
+    else
+        output="${output}no port is used"
+    fi
+
+    output="$output\n${prefix}${COLOR_BOLD}${COLOR_LBLUE}used volumes:  ${COLOR_NORM} "
+    if [ "$volumes" != "" ]; then
+        local firstVolume=true
+        while read -r volume; do
+            local volume=($volume)
+            ! $firstVolume && output="$output\n${prefix}                "
+            output="$output- ${volume[0]} -> ${volume[1]}"
+            firstVolume=false
+        done <<< "$volumes"
+    else
+        output="${output}no volume is used\n"
+    fi
+
+    echo -en "$output"
+}
+
+
+
+# ------------
+# Check if docker image exists
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+dockerImageExists ()
+{
+    local imageName="$1"
+
+    if [[ "$(docker images -q "$imageName" 2> /dev/null)" != "" ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+
+
+# ------------
+# Check if docker container is running
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-22
+# ------------
+dockerContainerIsRunning()
+{
+  if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "true" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+
+
+# ------------
+# Check if docker container exists (regardless whether it is running or not)
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-22
+# ------------
+dockerContainerExists()
+{
+  if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "" ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+
+
+# ------------
+# Creates a new docker container
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+createContainer ()
+{
+    local containerName="$1"
+
+    # some vars
+    local          imageFile="$containerPath/image"
+    local        linksFolder="$containerPath/links"
+    local        portsFolder="$containerPath/ports"
+    local      volumesFolder="$containerPath/volumes"
+    local environmentsFolder="$containerPath/environments"
+    local   parametersFolder="$containerPath/parameters"
+
+    # check image link
+    if [ ! -h "$imageFile" ]; then
+        log 'error' "The image link \"$imageFile\" was not found." && exit 1
+    else
+        local imageLinkTarget=$(readlink -f "$imageFile")
+
+        if [ "$imageLinkTarget" != "" ]; then
+            local imageName=$(basename "$imageLinkTarget")
+        else
+            local imageName=$(readlink "$imageFile")
+        fi
+    fi
+
+    # check ports
+    declare -A ports
+    if [ -d "$portsFolder" ]; then
+        for fileSource in $(find "$portsFolder" -type l); do
+            local fileTarget=$(readlink -f "$fileSource")
+
+            local      hostPort=$(basename "$fileSource")
+            local containerPort=$(basename "$fileTarget")
+
+            # replace . to /
+            hostPort=${hostPort//./\/}
+
+            ports[$hostPort]=$containerPort
+        done
+    fi
+
+    # check volumes
+    declare -A volumes
+    if [ -d "$volumesFolder" ]; then
+        for fileSource in $(find "$volumesFolder" -type l); do
+            local volumesFolderSed=$(echo "$volumesFolder" | sed 's/\//\\\//g')
+            local         hostPath=$(echo "$fileSource" | sed "s/$volumesFolderSed//g")
+            if [ -e "$fileSource" ]; then
+                local containerPath=$(readlink -f "$fileSource")
+            else
+                local containerPath=$(readlink "$fileSource")
+            fi
+
+            volumes[$containerPath]="$hostPath"
+        done
+    fi
+
+    # check links
+    declare -a links
+    if [ -d "$linksFolder" ]; then
+        for fileSource in $(find "$linksFolder" -type l); do
+            local          linkFile=$(readlink -f "$fileSource")
+            local linkContainerName=$(basename "$linkFile")
+
+            links+=("$linkContainerName")
+        done
+    fi
+
+    # check environments
+    declare -A environments
+    if [ -d "$environmentsFolder" ]; then
+        for fileSource in $(find "$environmentsFolder" -type l); do
+            local environmentFile=$(readlink -f "$fileSource")
+            local environmentValue=$(basename "$environmentFile")
+            local environmentName=$(basename "$fileSource")
+
+            environments[$environmentName]="$environmentValue"
+        done
+    fi
+
+    # declare parameters and add name first
+    declare -A parameters
+    parameters[name]="$containerName"
+
+    # check parameters
+    if [ -d "$parametersFolder" ]; then
+        for fileSource in $(find "$parametersFolder" -type l); do
+            local parameterFile=$(readlink -f "$fileSource")
+            local parameterValue=$(basename "$parameterFile")
+            local parameterName=$(basename "$fileSource")
+
+            parameters[$parameterName]="$parameterValue"
+        done
+    fi
+
+    # build docker run command
+    local command="docker run -dit"
+
+    # add ports to command
+    for containerPort in "${!ports[@]}"; do
+        local hostPort=${ports[$containerPort]}
+
+        command="$command -p $hostPort:$containerPort"
+    done
+
+    # add volume to command
+    for containerPath in "${!volumes[@]}"; do
+        local hostPath=${volumes[$containerPath]}
+
+        command="$command -v $containerPath:$hostPath"
+    done
+
+    # add environments to command
+    for environmentName in "${!environments[@]}"; do
+        local environmentValue=${environments[$environmentName]}
+
+        command="$command -e \"$environmentName=$environmentValue\"" #"
+    done
+
+    # add parameters to command
+    for parameterName in "${!parameters[@]}"; do
+        local parameterValue=${parameters[$parameterName]}
+
+        if [ "${parameterValue:0:1}" != "=" ]; then
+            parameterValue=" $parameterValue"
+        fi
+
+        command="$command --$parameterName$parameterValue"
+    done
+
+    # show links
+    for linkContainerName in "${links[@]}"; do
+        command="$command --link $linkContainerName:$linkContainerName"
+    done
+
+    # add image parameter
+    command="$command $imageName"
+
+    if $DEBUG; then
+        echo "Command to execute:"
+        echo "$command"
+        exit
+    else
+        # eval command
+        local resultCommand=$(eval "$command")
+    fi
+}
+
+
+
+# ------------
+# Start a new docker container
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+startContainer ()
+{
+    local containerName="$1"
+    local returnCommand=$(docker start "$containerName")
+}
+
+
+
+# ------------
+# Unpause a new docker container
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+unpauseContainer ()
+{
+    local containerName="$1"
+    local returnCommand=$(docker unpause "$containerName")
+}
+
+
+
+# ------------
+# Stop a new docker container
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+stopContainer ()
+{
+    local containerName="$1"
+    local returnCommand=$(docker stop "$containerName")
+}
+
+
+

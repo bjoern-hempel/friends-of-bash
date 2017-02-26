@@ -1,0 +1,191 @@
+#!/bin/bash
+
+
+
+# ------------
+# Config parser
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+cfgParser ()
+{ 
+  # read the given file
+  # print the content with:
+  # $ echo "${config[*]}"
+  config="$(<$1)" # read the file
+  # read the config prefix
+  configPrefix="${2:-conf}"
+  # replace 'xyz {' into 'conf.xyz () {' and remove commented lines
+  config=$(echo "${config[*]}" | sed '/^#/d' | sed -r 's/([a-z0-9/\-]+)[ ]*\{/'$configPrefix'.\1 \(\) {/g')
+  # collect function names
+  regex="($configPrefix.([a-z0-9/\-]+))[ ]*\(\)[ ]*\{"
+  functionNames=""
+  confNames=""
+  while read -r configLine; do
+    if [[ "$configLine" =~ $regex ]] ; then
+      if [ "$functionNames" != "" ]; then
+        functionNames="$functionNames "
+        confNames="$confNames "
+      fi
+      functionNames="$functionNames${BASH_REMATCH[1]}"
+      confNames="$confNames${BASH_REMATCH[2]}"
+    fi 
+  done <<< "${config[*]}"
+  # add variable with function names
+  config+=($'\n')
+  config+=($'\n'$configPrefix'Functions=('$functionNames')')
+  config+=($'\n'$configPrefix's=('$confNames')')
+  # eval the result
+  # print the result with
+  # $ echo "${config[*]}"
+  #echo "${config[*]}"
+  eval "$(echo "${config[*]}")"
+}
+
+
+
+# ------------
+# Get the last timestamp from given namespace.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getLastTimeFromFile ()
+{
+  local file="$1"
+  local namespace="$2"
+  getCachedValue "$file" "$namespace" "0"
+  return 0
+}
+
+
+
+# ------------
+# Set the given timestamp with given namespace.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+setCurrentTimeToFile ()
+{
+  local file="$1"
+  local namespace="$2"
+  time=$(date +%s)
+  setCachedValue "$file" "$namespace" "$time"
+  return 0
+}
+
+
+
+# ------------
+# Get the last cached value from given namespace.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getCachedValue ()
+{
+  local file="$1"
+  local namespace="$2"
+  local default="${3:-0}"
+  if [ ! -f "$file" ]; then
+    echo "$default"
+    return 0
+  fi
+  while read line; do
+    IFS=' ' read -r -a array <<< "$line"
+    if [ "$namespace" == "${array[0]}" ]; then
+      echo "${array[1]}"
+      return 0
+    fi
+  done < "$file"
+  echo "$default"
+  return 0
+}
+
+
+
+# ------------
+# Set the given value with given namespace.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+setCachedValue ()
+{
+  local file="$1"
+  local namespace="$2"
+  local value="$3"
+  # create folder
+  [ ! -d "$(dirname $file)" ] && mkdir -p "$(dirname $file)"
+
+  # touch file
+  [ ! -f "$file" ] && touch "$file"
+
+  local counter=0
+  while read line; do
+    ((counter++))
+
+    IFS=' ' read -r -a array <<< "$line"
+
+    if [ "$namespace" == "${array[0]}" ]; then
+      removeLineFromFile "$file" $counter
+    fi
+  done < "$file"
+
+  filesize=$(stat --printf="%s" "$file")
+
+  if [ "$filesize" -gt 0 ]; then
+    echo "$namespace $value" >> "$file"
+  else
+    echo "$namespace $value" > "$file"
+  fi
+
+  return 0
+}
+
+
+
+# ------------
+# Remove the given linenumber from file.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+removeLineFromFile ()
+{
+  local file="$1"
+  local line="$2"
+  if [ ! -f "$file" ]; then
+    touch "$file"
+    return 0
+  fi
+  result=$(sed $line' d' "$file")
+  echo -e "$result" > "$file.tmp"
+  # remove empty lines
+  grep -v '^$' "$file.tmp" > "$file"
+  rm "$file.tmp"
+}
+
+
+
+# ------------
+# Executes a given script
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-01-26
+# ------------
+executeScript ()
+{
+    local script="$1"
+
+    # check start script
+    if [ -f "$script" ]; then
+        source "$script"
+    fi
+}
+
+
+

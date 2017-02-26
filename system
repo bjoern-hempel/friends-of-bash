@@ -1,0 +1,110 @@
+#!/bin/bash
+
+
+
+# ------------
+# Install a given script to given install path
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+installApp()
+{
+    sourceFile="$1"
+    targetFile="$2"
+
+    # inform the user
+    log "info" "Try to install the given script\n$sourceFile to\n$targetFile."
+
+    # check the given source file
+    if [ ! -f "$sourceFile" ]; then
+        log "error" "The given install file\n$sourceFile does not exist."
+        return 1
+    fi
+
+    # check if the target file already exists
+    if [ -f "$targetFile" ]; then
+        log "info" "The target file\n$targetFile already exists."
+        return 0
+    fi
+
+    # try to install the app
+    ln -s "$sourceFile" "$targetFile"
+
+    # error while installing pub deploy script
+    if [ ! -f "$targetFile" ]; then
+        log "error" "An error occurred while installing the given script\n$sourceFile\nto $targetPath"
+        return 1
+    fi
+
+    # change permissions
+    chmod 775 "$targetFile"
+
+    # return true
+    log "success" "The given script\n$sourceFile\nwas successfully installed to $targetPath"
+    return 0
+}
+
+
+
+# ------------
+# Remove a given script from given install path
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+removeApp()
+{
+    sourceFile="$1"
+    targetPath="$2"
+    basename=$(basename "$sourceFile")
+    targetFile="$targetPath/$basename"
+    # inform the user
+    log "info" "Try to remove the given script $targetFile."
+    # check if the target file exists or not
+    if [ ! -f "$targetFile" ]; then
+        log "info" "The target file $targetFile is already removed or was never installed."
+        return 0
+    fi
+    # try to remove the target file
+    rm "$targetFile"
+    # check if file was removed successfully
+    if [ -f "$targetFile" ]; then
+        return 1
+    fi
+    # successfully removed
+    return 0
+}
+
+
+
+# ------------
+# Gets the name of environment. Possible values are:
+# - prod    (production)
+# - staging (staging)
+# - dev     (development)
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getEnvironment()
+{
+    local defaultEnvironment="dev"
+    # get the system ip
+    local thisIp=$(getIpAddress)
+    # get the parameter
+    local -n envs=$1
+    # try to find an environment
+    for environment in "${!envs[@]}"; do
+        local ip=${envs[$environment]}
+        if [ "$ip" == "$thisIp" ]; then
+            echo $environment
+            return 0
+        fi
+    done
+    echo "$defaultEnvironment"
+    return 0
+}
+
+
+

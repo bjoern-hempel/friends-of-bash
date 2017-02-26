@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# some vars
+pathLib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# include the sources
+source "$pathLib/array"
+source "$pathLib/color"
+source "$pathLib/date"
+source "$pathLib/device"
+source "$pathLib/docker"
+source "$pathLib/docker-container"
+source "$pathLib/docker-image"
+source "$pathLib/file"
+source "$pathLib/filesystem"
+source "$pathLib/general"
+source "$pathLib/install"
+source "$pathLib/mail"
+source "$pathLib/network"
+source "$pathLib/screen"
+source "$pathLib/string"
+source "$pathLib/system"
+
+

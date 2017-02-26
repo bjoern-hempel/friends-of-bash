@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+
+# ------------
+# Gets the current timestamp.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getCurrentTimestamp ()
+{
+  echo $(date +%s)
+}
+
+
+

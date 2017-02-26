@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# ------------
+# (bool)    containerEnvironmentExists (string) $imageName
+# ------------
+
+# ------------
+# Check if image environment exists.
+#
+# @author  Björn Hempel
+# @version 1.0
+# @date    2017-02-16
+# ------------
+containerEnvironmentExists ()
+{
+    local                imageName="$1"
+    local containerEnvironmentPath="containers/$imageName"
+
+    [ -d "$containerEnvironmentPath" ] && return 0 || return 1
+}
+

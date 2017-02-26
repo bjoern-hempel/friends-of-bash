@@ -1,0 +1,47 @@
+#!/bin/bash
+
+
+
+# ------------
+# Check if port is open
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+isPortOpen ()
+{
+  local ip=$1
+  local port=$2
+  [ `id -u` -le 0 ] && nmapCommand="sudo -u bjoern nmap" || nmapCommand="nmap"
+  status=`$nmapCommand -p $port $ip | grep "$port/" | sed -r 's/^.+(open|close).+$/\1/g'`
+  [ "$status" == "open" ] && return 0 || return 1
+}
+
+
+
+# ------------
+# Gets the system ip address
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getIpAddress ()
+{
+  /sbin/ifconfig | grep -E 'inet (addr|Adresse):' | awk '{print $2}' | sed -E 's/(Adresse|addr)://' | grep -v '127.0.0.1' | grep -v '^172.' | head -n 1
+}
+
+
+
+# ------------
+# Get the ip address from given url
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getIpAddressFromUrl ()
+{
+  echo $(getent hosts $1 | awk '{ print $1 }')
+}
+
+
+

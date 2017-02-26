@@ -1,0 +1,79 @@
+#!/bin/bash
+
+
+
+# ------------
+# Get ASCII char from given integer value.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+chr ()
+{
+  [ "$1" -lt 256 ] || return 1
+  printf "\\$(printf '%03o' "$1")"
+}
+
+
+
+# ------------
+# Get truncated text.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getTruncatedText ()
+{
+  local      text="$1"
+  local maxlength="$2"
+  if [ "${#text}" -le "$maxlength" ]; then
+    echo -n "$text"
+  else
+    echo -n "${text:0:$((maxlength - 3))}..."
+  fi
+}
+
+
+
+# ------------
+# Makes a given string sed compatible
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# ------------
+getSedCompatibleString()
+{
+    string=`echo "$1" | sed 's/\\\\/\\\\\\\\/g' | sed ':a;N;$!ba;s/\n/\\\\n/g' | sed 's/\//\\\\\//g'`
+    echo "$string"
+}
+
+
+
+# ------------
+# Checks if the given text (multiline) contains the given line (value).
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-02-16
+# ------------
+textHasEqualValue ()
+{
+    local lines="$1"
+    local value="$2"
+
+    local singleResult=""
+    while read -r line; do
+        if [ "$value" == "$line" ]; then
+            singleResult="$line"
+        fi
+    done <<< "$lines"
+
+    if [ "$singleResult" != "" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+
+

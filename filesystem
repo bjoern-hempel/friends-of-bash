@@ -1,0 +1,173 @@
+#!/bin/bash
+
+
+
+# ------------
+# Creates a given folder if it doesn't exist.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+createFolderIfNotExists()
+{
+    local   folder="$1"
+    local   indent="${2:-}"
+    local pathName="${3:-Path}"
+    if [ -d "$folder" ]; then
+        log "info" "${indent}${pathName} \"$folder\" already exists."
+        return 1
+    fi
+    log "info" "${indent}Create ${pathName} \"$folder\""
+    # create folder
+    mkdir -p "$folder"
+    # change owner and permissions
+    chmod -R 775 "$folder"
+    chown -R www-data:users "$folder"
+    # check success
+    if [ ! -d "$folder" ]; then
+        log "error" "${indent}Unable to create ${pathName} \"$folder\""
+        return 1
+    fi
+    log "success" "${indent}${pathName} \"$folder\" successfully created."
+    return 0
+}
+
+
+
+# -----
+# Creates a given directory
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @date    2016-11-01
+# -----
+createDir ()
+{
+    local      path="$1"
+    local  namePath="${2:-path}"
+
+    local  textPathDoesNotExist=$(printf "The %s \"%s\" does not exist. Create one."       "$namePath" "$path")
+    local textPathAlreadyExists=$(printf "The %s \"%s\" already exists."                   "$namePath" "$path")
+    local     textErrorCreating=$(printf "An error occurred while creating the %s \"%s\"." "$namePath" "$path")
+    local   textSuccessCreating=$(printf "The %s \"%s\" was created successfully."         "$namePath" "$path")
+
+    # path already exists
+    if [ -d "$path" ]; then
+        log "info" "$textPathAlreadyExists" && return 0
+    fi
+
+    # path doesn't exist
+    log "info" "$textPathDoesNotExist"
+    mkdir -p "$path"
+
+    # check path
+    if [ ! -d "$path" ]; then
+        log "error" "$textErrorCreating" && return 1
+    fi
+
+    # set credentials
+    chmod 775 "$path"
+
+    log "success" "$textSuccessCreating" && return 0
+}
+
+
+
+# ------------
+# Creates a given symlink if it doesn't exist.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+createSymlinkIfNotExists()
+{
+    local sourceConfigFile="$1"
+    local targetConfigFile="$2"
+    local           indent="${3:-}"
+    local         pathName="${4:-Symlink}"
+    # check source file
+    if [ ! -f "$sourceConfigFile" ]; then
+        log "warning" "${indent}${pathName} \"$sourceConfigFile\" does not exist."
+        continue
+    fi
+    # check target file
+    if [ -f "$targetConfigFile" ]; then
+        log "warning" "${indent}${pathName} \"$targetConfigFile\" does already exist."
+        continue
+    fi
+    # create symlink to target file
+    ln -s "$sourceConfigFile" "$targetConfigFile"
+    #chmod 775 "$targetConfigFile"
+    #chown www-data:users "$targetConfigFile"
+    # check target file
+    if [ ! -f "$targetConfigFile" ]; then
+        log "error" "${indent}Unable to create ${pathName} \"$targetConfigFile\""
+        continue
+    fi
+    # symlink successfully created
+    log "success" "${indent}${pathName} \"$targetConfigFile\" successfully created."
+}
+
+
+
+# -----
+# Counts the files and folders within the given folder
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @date    2016-11-01
+# @version 1.0
+# -----
+countFiles ()
+{
+    local numberFiles=$(ls -la "$1" | grep -v "total " | grep -v ".deploy-" | wc -l)
+    echo "$((numberFiles - 2))"
+}
+
+
+
+# ------------
+# Rsyncs two folders.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# ------------
+rsyncFolder ()
+{
+    local sourcePath="$1"
+    local targetPath="$2"
+
+    # create backup path
+    if [ ! -d "$targetPath" ]; then
+        log 'info' "Create backup folder \"$targetPath\"."
+        mkdir -p "$targetPath"
+    else
+        log 'info' "Backup folder \"$targetPath\" exists."
+    fi
+
+    # check target path
+    if [ ! -d "$targetPath" ]; then
+        log 'error' "An error occurred while creating the backup folder \"$targetPath\"." && return 1
+    fi
+
+    # check source path
+    if [ ! -d "$sourcePath" ]; then
+        log 'error' "The source path \"$sourcePath\" does not exist." && return 1
+    fi
+
+    # start rsync
+    log 'info' "Rsync: Save all data from \"$sourcePath\" to \"$targetPath\"."
+
+    # rsync | remove first line | remove the last three lines
+    result=$(rsync -ahv --out-format="[%t] [INFO...] %o: %f (%l byte) (%M)" "$sourcePath/" "$targetPath" | tail -n+2 | sed -n -e :a -e '1,3!{P;N;D;};N;ba')
+
+    if [ "$result" == "" ]; then
+        log 'info' "Rsync: Everything up to date."
+    else
+        echo -e "$result"
+        log 'info' "Rsync: done."
+    fi
+
+    return 0
+}
+
+
+

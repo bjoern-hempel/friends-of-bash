@@ -1,0 +1,180 @@
+#!/bin/bash
+
+
+
+# ------------
+# Gets centered text
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getCenteredText ()
+{
+  local       text="$1"
+  local    columns=${2:-10}
+  local textLength=${#text}
+  local  remainder=$(($columns-$textLength))
+  local       left=$(($remainder/2))
+  local      right=$(($remainder-$left))
+  # left should be greater
+  if [ "$right" -gt "$left" ]; then
+    right=$((right+left))
+     left=$((right-left))
+    right=$((right-left))
+  fi
+  left=$((left+textLength))
+  printf "%*s%*s" $left "$text" $right ""
+}
+
+
+
+# ------------
+# Get the cursor position x
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getX ()
+{
+  declare -a position
+  exec < /dev/tty
+  oldstty=$(stty -g)
+  stty raw -echo min 0
+  echo -en "\033[6n" > /dev/tty
+  IFS=';' read -r -d R -a pos
+  stty $oldstty
+  eval "position[0]=$((${pos[0]:2} - 2))"
+  eval "position[1]=$((${pos[1]} - 1))"
+  echo ${position[1]}
+}
+
+
+
+# ------------
+# Get the cursor position y
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getY ()
+{
+  declare -a position
+  exec < /dev/tty
+  oldstty=$(stty -g)
+  stty raw -echo min 0
+  echo -en "\033[6n" > /dev/tty
+  IFS=';' read -r -d R -a pos
+  stty $oldstty
+  eval "position[0]=$((${pos[0]:2} - 2))"
+  eval "position[1]=$((${pos[1]} - 1))"
+  echo ${position[0]}
+}
+
+
+
+# ------------
+# Fills the rest of the line with spaces
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+fillLineWithSpaces ()
+{
+  local cronmode=${1:-0}
+  $cronmode && return 0
+  cols=$(tput cols)
+     x=$(getX)
+  rest=$(($cols-$x))
+  printf %${rest}s #| tr ' ' '-'
+}
+
+
+
+# ------------
+# Clears the screen and file
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+clearScreenFile ()
+{
+  local   file="$1"
+  local target="${2:-BOTH}"
+  # create folder
+  [ ! -d "$(dirname $file)" ] && mkdir -p "$(dirname $file)"
+  # touch file
+  [ ! -f "$file" ] && touch "$file"
+  # echo to target
+  case "$target" in
+    BOTH)
+      printf "\033c"
+      printf "" > "$file"
+    ;;
+    SCREEN)
+      printf "\033c"
+    ;;
+    FILE)
+      printf "" > "$file"
+    ;;
+    NONE)
+      printf ""
+    ;;
+    *)
+      printf ""
+    ;;
+  esac
+}
+
+
+
+# ------------
+# Prints to screen and file
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+echoScreenFile ()
+{
+  local   file="$1"
+  local   text="${2:-}"
+  local target="${3:-BOTH}"
+  local   mode="${4:-LB}"
+  # create folder
+  [ ! -d "$(dirname $file)" ] && mkdir -p "$(dirname $file)"
+  # touch file
+  [ ! -f "$file" ] && touch "$file"
+  # preparations
+  case "$mode" in
+    LB)
+      text="$text\n"
+    ;;
+    NO_LB)
+      text="$text"
+    ;;
+    *)
+      text="$text"
+    ;;
+  esac
+  # echo to target
+  case "$target" in
+    BOTH)
+      printf "$text"
+      printf "$text" >> "$file"
+    ;;
+    SCREEN)
+      printf "$text"
+    ;;
+    FILE)
+      printf "$text" >> "$file"
+    ;;
+    NONE)
+      printf ""
+    ;;
+    *)
+      printf ""
+    ;;
+  esac
+}
+
+
+

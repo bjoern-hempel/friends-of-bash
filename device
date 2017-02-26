@@ -1,0 +1,38 @@
+#!/bin/bash
+
+
+
+# -----
+# Mounts a nfs drive
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @date    2016-11-30
+# -----
+mountNfs ()
+{
+    local      nfsMountServer="$1"
+    local nfsMountPointRemote="$2"
+    local  nfsMountPointLocal="$3"
+    local nfsMountTemplate="mount -t nfs $nfsMountServer:$nfsMountPointRemote $nfsMountPointLocal -o rw,sec=sys"
+
+    # check if path is already mounted
+    if isPathMounted "$nfsMountPointLocal"; then
+        log "info" "The point \"$nfsMountPointLocal\" is already mounted. Abort.."
+        return 0
+    fi
+
+    # get the current user id
+    local userId=`id -u`
+
+    # add sudo to mount command
+    if [[ $userId -ne 0 ]]; then
+        nfsMountTemplate="sudo $nfsMountTemplate"
+    fi
+
+    log "info" "Try to mount the nfs share \"$nfsMountServer:$nfsMountPointRemote\" to \"$nfsMountPointLocal\".."
+    $nfsMountTemplate
+    log "success" "The nfs share \"$nfsMountServer:$nfsMountPointRemote\" was successfully mounted to \"$nfsMountPointLocal\"."
+}
+
+
+

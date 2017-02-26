@@ -1,0 +1,55 @@
+#!/bin/bash
+
+
+
+# ------------
+# Log function.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+log ()
+{
+  local            logText=$2
+  local             status="${1^^}"
+  local            showLog=${3:-1}
+  local               date=`date "+%Y-%m-%d %H:%M:%S"`
+  local      numberOfLines=$(echo -e "$logText" | wc -l)
+  local multilineSignFirst='┏━  '
+  local      multilineSign='┃   '
+  local  multilineSignLast='┗━	'
+  local           fillSign='‧'
+  # disabled output
+  if [ "$showLog" -lt 1 ]; then
+    return 0
+  fi
+  if [ $status == "SUCCESS" ]; then
+    status="\033[1;32m"$status"\033[0m"
+  fi
+  if [ $status == "WARNING" ]; then
+    status="\033[1;33m"$status"\033[0m"
+  fi
+  if [ $status == "ERROR" ]; then
+    status="\033[1;31m"$status"$fillSign$fillSign\033[0m"
+  fi
+  if [ $status == "INFO" ]; then
+    status="\033[1;36m"$status"$fillSign$fillSign$fillSign\033[0m"
+  fi
+  if [ $status == "REMOTE" ]; then
+    status="\033[1;35m"$status"$fillSign\033[0m"
+  fi
+  if [ $status == "HEADER" ]; then
+    status="\033[1;34m"$status"$fillSign\033[0m"
+    logText=${logText^^}
+  fi
+  # check multiline && replace line breaks
+  if [ "$numberOfLines" -gt 1 ]; then
+    logText="$multilineSignFirst$logText"
+    logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n                                $multilineSign/g")
+    logText=$(echo -en "$logText" | sed '$s/┃ /┗━/g')
+  fi
+  echo -e "[$date] [$status] $logText"
+}
+
+
+
