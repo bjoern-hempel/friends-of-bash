@@ -5,6 +5,7 @@ pathLib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # include the sources
 source "$pathLib/array"
+source "$pathLib/checker"
 source "$pathLib/color"
 source "$pathLib/date"
 source "$pathLib/device"
