@@ -26,11 +26,17 @@ log ()
   if [ $status == "SUCCESS" ]; then
     status="\033[1;32m"$status"\033[0m"
   fi
+  if [ $status == "PASSED" ]; then
+    status="\033[1;32m"$status"$fillSign\033[0m"
+  fi
   if [ $status == "WARNING" ]; then
     status="\033[1;33m"$status"\033[0m"
   fi
   if [ $status == "ERROR" ]; then
     status="\033[1;31m"$status"$fillSign$fillSign\033[0m"
+  fi
+  if [ $status == "FAILED" ]; then
+    status="\033[1;31m"$status"$fillSign\033[0m"
   fi
   if [ $status == "INFO" ]; then
     status="\033[1;36m"$status"$fillSign$fillSign$fillSign\033[0m"
