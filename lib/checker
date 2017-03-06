@@ -29,7 +29,7 @@ isPortOpenCheck()
     fi
 }
 
-isPortNotOpenCheck()
+isNotPortOpenCheck()
 {
     if ! isPortOpen "$ip" "$port"; then
         log 'passed' "The port \"$port\" on system with ip \"$ip\" is closed."
@@ -46,11 +46,29 @@ isHttpStatusCodeCheck()
     expectedStatusCode="$2"
 
     if hasHttpStatusCodeFromUrl "$url" "$expectedStatusCode"; then
-        log 'passed' "The url \"$url\" returns the expected status code \"$expectedStatusCode\""
+        log 'passed' "The url \"$url\" returns the expected status code \"$expectedStatusCode\"."
         return 0
     else
-        log 'failed' "The url \"$url\" does not return the expected status code \"$expectedStatusCode\""
+        log 'failed' "The url \"$url\" does not return the expected status code \"$expectedStatusCode\"."
         return 1
     fi
+}
+
+isDomainAssignedToIpCheck()
+{
+    domain="$1"
+    ip="$2"
+
+    assignedIp=$(dig A +short "$domain")
+
+    # check passed
+    if [ "$ip" == "$assignedIp" ]; then
+        log 'passed' "The given domain \"$domain\" is assigned to ip \"$ip\"."
+        return 0
+    fi
+
+    # check failed
+    log 'failed' "The given domain \"$domain\" is not assigned to ip $ip. Assigned ip: $assignedIp"
+    return 1
 }
 

@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# ------------
+# Gets the certificate of given domain
+#
+# @author  Björn Hempel
+# @version 1.0
+# 
+# ------------
+getDomainCert()
+{
+    local domain="$1"
+
+    openssl s_client -connect $domain:443 -servername $domain 2>&1 < /dev/null | \
+        sed -n '/-----BEGIN/,/-----END/p'
+}
+
+# ------------
+# Gets the issuer of given domain
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getIssuer()
+{
+    local domain="$1"
+
+    openssl s_client -connect $domain:443 -servername $domain 2>&1 < /dev/null | \
+        sed -n '/-----BEGIN/,/-----END/p' | \
+        openssl x509 -noout -issuer | sed -r 's/^issuer= //'
+}
+
+# ------------
+# Gets the chain certificate
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getChainCertificate()
+{
+    local domain="$1"
+
+    local issuer=$(getIssuer "$domain")
+
+    issuer=$(echo "$issuer" | sed 's/\//\\\//g')
+
+    local chainCert=$(openssl s_client -connect $domain:443 -showcerts -servername $domain 2>/dev/null < /dev/null | sed -n "/s:$issuer/,/-----END/p" | sed -n '/-----BEGIN/,/-----END/p')
+
+    echo "$chainCert"
+}
+
+# ------------
+# Verifies the given certificate.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+isCertificateValid()
+{
+    local certificateFile="$1"
+    local chainFile="$2"
+    local domain="$3"
+
+    local status=$(openssl verify -CAfile "$chainFile" "$certificateFile" | grep ": OK")
+
+    if [ "$status" != "" ]; then
+        log 'passed' "The certificate from the domain \"$domain\" is valid."
+        return 0;
+    fi
+
+    log 'failed' "The certificate from the domain \"$domain\" is invalid."
+    return 1
+}
+
+# ------------
+# Verifies the given chain certificate.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+isChainCertificateValid()
+{
+    local chainFile="$1"
+    local issuer="$2"
+
+    local status=$(openssl verify "$chainFile" | grep ": OK")
+
+    if [ "$status" != "" ]; then
+        log 'passed' "The chainfile from the issuer \"$issuer\" is valid."
+        return 0;
+    fi
+
+    log 'failed' "The chainfile from the issuer \"$issuer\" is invalid."
+    return 1
+}
+
+# ------------
+# Gets the ocsp uri
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getOcspUri()
+{
+    local domain="$1"
+
+    echo "$(getDomainCert $domain)" | openssl x509 -noout -ocsp_uri
+}
+
+
+# ------------
+# Gets the ocsp uri
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+isStatusOcspOk()
+{
+    local domain="$1"
+    local chainfile="$2"
+    local certFile="$3"
+    local ocspUri=$(getOcspUri "$domain")
+    local ocspHostname=$(getHostnameFromUrl $ocspUri)
+
+    local status=$(openssl ocsp -issuer "$chainfile" -cert "$certFile" -url "$ocspUri" -CAfile "$chainfile" -verify_other "$chainfile" -header "HOST" "$ocspHostname" 2>&1)
+
+    status=$(echo "$status" | grep "Response verify OK")
+
+    if [ "$status" != "" ]; then
+        log 'passed' "The ocsp is activated on domain \"$domain\" (\"$ocspUri\")."
+        return 0
+    fi
+
+    log 'failed' "The ocsp is not activated on domain \"$domain\" (\"$ocspUri\")."
+    return 1
+}
+
+
+
+
