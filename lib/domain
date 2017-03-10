@@ -14,3 +14,36 @@ getHostnameFromUrl()
     echo "$url" | awk -F/ '{print $3}'
 }
 
+# ------------
+# Builds a new url with given url, path and authentication.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-03-10
+# ------------
+buildUrl()
+{
+    local  url="$1"
+    local path="${2:-}"
+    local auth="${3:-}"
+
+    protocol=$(getIndexFromStringSeparatedBySeparator "$url" "://" 0 2)
+
+    if [ "$protocol" == "" ]; then
+        protocol="http"
+    fi
+
+    # remove protocol
+    url=$(getIndexFromStringSeparatedBySeparator "$url" "://" 1 2 1)
+
+    # remove authentication
+    if [ "$auth" != "" ]; then
+        url=$(getIndexFromStringSeparatedBySeparator "$url" "@" 1 2)
+        auth="$auth@"
+    fi
+
+    # TODO: remove path and add given path
+ 
+    echo "${protocol}://${auth}${url}${path}"
+}
+

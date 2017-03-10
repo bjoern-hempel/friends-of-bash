@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 # ------------
 # Get ASCII char from given integer value.
 #
@@ -13,8 +11,6 @@ chr ()
   [ "$1" -lt 256 ] || return 1
   printf "\\$(printf '%03o' "$1")"
 }
-
-
 
 # ------------
 # Get truncated text.
@@ -33,8 +29,6 @@ getTruncatedText ()
   fi
 }
 
-
-
 # ------------
 # Makes a given string sed compatible
 #
@@ -46,8 +40,6 @@ getSedCompatibleString()
     string=`echo "$1" | sed 's/\\\\/\\\\\\\\/g' | sed ':a;N;$!ba;s/\n/\\\\n/g' | sed 's/\//\\\\\//g'`
     echo "$string"
 }
-
-
 
 # ------------
 # Checks if the given text (multiline) contains the given line (value).
@@ -75,5 +67,35 @@ textHasEqualValue ()
     return 1
 }
 
+# ------------
+# Returns a part of a string separated by a separator.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-03-10
+# ------------
+function getIndexFromStringSeparatedBySeparator()
+{
+    local string="$1"
+    local separator="$2"
+    local index="${3:-1}"
+    local expected="${4:-1}"
 
+    separator="${separator//\//\\\/}"
+
+    local array=(`echo $string | sed "s/$separator/\n/g"`);
+
+    local indexes=${#array[@]}
+
+    if [ "$indexes" -lt "$expected" ]; then
+        if [ "$((index + 1))" -ge "$expected" ]; then
+           local index=$((index - $expected + $indexes))
+           echo "${array[$index]}"
+        else
+           echo ''
+        fi
+    else
+        echo "${array[$index]}"
+    fi
+}
 
