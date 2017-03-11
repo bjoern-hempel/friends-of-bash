@@ -1,16 +1,25 @@
 #!/bin/bash
 
-
-
 # ------------
 # Gets the current timestamp.
 #
 # @author  Björn Hempel
-# @version 1.0
+# @version 1.0 (2016-11-01)
 # ------------
-getCurrentTimestamp ()
+getCurrentTimestamp()
 {
-  echo $(date +%s)
+    echo $(date +%s)
+}
+
+# ------------
+# Tries to parse the given date and returns the timestamp.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-03-11)
+# ------------
+getTimestampFromDate()
+{
+    echo $(date -d "$1" +%s)
 }
 
 

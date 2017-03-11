@@ -55,7 +55,7 @@ getChainCertificate()
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-isCertificateValid()
+isCertificateVerified()
 {
     local certificateFile="$1"
     local chainFile="$2"
@@ -64,11 +64,49 @@ isCertificateValid()
     local status=$(openssl verify -CAfile "$chainFile" "$certificateFile" | grep ": OK")
 
     if [ "$status" != "" ]; then
-        log 'passed' "The certificate from the domain \"$domain\" is valid."
+        log 'passed' "The certificate from the domain \"$domain\" was successfully verified."
+        return 0
+    fi
+
+    log 'failed' "The certificate from the domain \"$domain\" was not successfully verified."
+    return 1
+}
+
+# ------------
+# Checks the validity fo the given certificate.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-03-11)
+# ------------
+isCertificateValid()
+{
+    local certificateFile="$1"
+    local domain="$2"
+
+    local warningDays=14
+
+    # check certificate date
+            currentTimestamp=$(getCurrentTimestamp)
+         validUntilTimestamp=$(getValidUntilFromCertificate "$certificateFile" true)
+        differenceValidUntil=$((validUntilTimestamp-currentTimestamp))
+    differenceValidUntilDays=$((differenceValidUntil/60/60/24))
+
+    validUntilFormated=$(date --date @$validUntilTimestamp +"%Y-%m-%d %H:%M")
+
+    # certificate is valid more than $warningDays days
+    if [ $differenceValidUntilDays -gt $warningDays ]; then
+        log 'passed' "The certificate from the domain \"$domain\" is valid until \"$validUntilFormated\"."
+        return 0
+    fi
+
+    # certificate is valid less then $warningDays days
+    if [ $differenceValidUntilDays -gt 0 ]; then
+        log 'warning' "The certificate from the domain \"$domain\" is only valid until \"$validUntilFormated\"."
         return 0;
     fi
 
-    log 'failed' "The certificate from the domain \"$domain\" is invalid."
+    # certificate is expired.
+    log 'failed' "The certificate from the domain \"$domain\" is not invalid. Expired at \"$validUntilFormated\"."
     return 1
 }
 
@@ -78,7 +116,7 @@ isCertificateValid()
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-isChainCertificateValid()
+isChainCertificateVerified()
 {
     local chainFile="$1"
     local issuer="$2"
@@ -86,11 +124,11 @@ isChainCertificateValid()
     local status=$(openssl verify "$chainFile" | grep ": OK")
 
     if [ "$status" != "" ]; then
-        log 'passed' "The chainfile from the issuer \"$issuer\" is valid."
+        log 'passed' "The chainfile from the issuer \"$issuer\" was successfully verified."
         return 0;
     fi
 
-    log 'failed' "The chainfile from the issuer \"$issuer\" is invalid."
+    log 'failed' "The chainfile from the issuer \"$issuer\" was successfully verified."
     return 1
 }
 
@@ -106,7 +144,6 @@ getOcspUri()
 
     echo "$(getDomainCert $domain)" | openssl x509 -noout -ocsp_uri
 }
-
 
 # ------------
 # Gets the ocsp uri
@@ -135,6 +172,25 @@ isStatusOcspOk()
     return 1
 }
 
+# ------------
+# Gets the valid until gmt date of the given certificate
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-03-11)
+# ------------
+getValidUntilFromCertificate()
+{
+    local certificateFile="$1"
+    local timestamp=${2:-false}
+  
+    local validUntil=$(openssl x509 -noout -dates -in "$certificateFile" | \
+        grep 'notAfter=' | \
+        sed "s/.*notAfter=*//")
 
+    if $timestamp; then
+        validUntil=$(getTimestampFromDate "$validUntil")
+    fi
 
+    echo "$validUntil"
+}
 
