@@ -47,3 +47,23 @@ buildUrl()
     echo "${protocol}://${auth}${url}${path}"
 }
 
+# --------
+# Builds the url and returns the ports with given url and config.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-03-11
+# ------------
+getUrlAndPorts()
+{
+       url="$1"
+    config="$2"
+
+      auth=$(getIndexFromStringSeparatedBySeparator "$config" "@" 0 2)
+    config=$(getIndexFromStringSeparatedBySeparator "$config" "@" 1 2)
+     ports=$(getIndexFromStringSeparatedBySeparator "$config" ":" 0)
+      path=$(getIndexFromStringSeparatedBySeparator "$config" ":" 1)
+       url=$(buildUrl "$url" "$path" "$auth")
+
+    echo "$url" "$ports"
+}
