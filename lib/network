@@ -33,13 +33,16 @@ getHttpStatusCodeFromUrl()
 hasHttpStatusCodeFromUrl()
 {
     url="$1"
-    statusCode="$2"
+    statusCodes="$2"
 
     returnedStatusCode=$(getHttpStatusCodeFromUrl "$url")
 
-    if [ "$statusCode" == "$returnedStatusCode" ]; then
-        return 0
-    fi
+    IFS=',' read -ra statusCodeArray <<< "$statusCodes"
+    for statusCode in "${statusCodeArray[@]}"; do
+        if [ "$statusCode" == "$returnedStatusCode" ]; then
+            return 0
+        fi
+    done
 
     return 1
 }
