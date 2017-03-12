@@ -82,8 +82,7 @@ isCertificateValid()
 {
     local certificateFile="$1"
     local domain="$2"
-
-    local warningDays=14
+    local warningDays="${3:-14}"
 
     # check certificate date
             currentTimestamp=$(getCurrentTimestamp)
@@ -192,5 +191,48 @@ getValidUntilFromCertificate()
     fi
 
     echo "$validUntil"
+}
+
+# ------------
+# Gets the domain name from given certificate file
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-03-12)
+# ------------
+getDomainFromCertificate()
+{
+    local certificateFile="$1"
+
+    local owner=$(openssl x509 -noout -subject -in "$certificateFile")
+
+    if [[ "$owner" =~ CN=(.+)$ ]]; then
+        echo ${BASH_REMATCH[1]};
+        return 0
+    fi
+
+    echo ""
+    return 1
+}
+
+# ------------
+# Checks if the given domain matches with the certificate file
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-03-12)
+# ------------
+isDomainFromCertificate()
+{
+    local domain="$1"
+    local certificateFile="$2"
+
+    local domainCertificate=$(getDomainFromCertificate "$certificateFile")
+
+    if [ "$domain" == "$domainCertificate" ]; then
+        log 'passed' "The domain \"$domain\" validate the domain name in certificate file."
+        return 0
+    fi
+
+    log 'failed' "The domain \"$domain\" differs from the domain name in certificate file (\"$certificateFile\" returns \"$domainCertificate\")."
+    return 1
 }
 
