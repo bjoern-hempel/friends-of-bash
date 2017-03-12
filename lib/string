@@ -87,8 +87,8 @@ function getIndexFromStringSeparatedBySeparator()
 
     local indexes=${#array[@]}
 
-    if [ "$indexes" -lt "$expected" ]; then
-        if [ "$((index + 1))" -ge "$expected" ]; then
+    if [ $indexes -lt $expected ]; then
+        if [ $((index + 1)) -ge $expected ]; then
            local index=$((index - $expected + $indexes))
            echo "${array[$index]}"
         else

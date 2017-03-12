@@ -42,45 +42,64 @@ isNotPortOpenCheck()
 
 isHttpStatusCodeCheck()
 {
-                    url="$1"
-    expectedStatusCodes="$2"
-     returnedStatusCode=$(getHttpStatusCodeFromUrl "$url")
+    local                 url="$1"
+    local expectedStatusCodes="$2"
+
+    read returnedStatusCode comparison < <(getHttpStatusCodeFromUrl "$url")
 
     # split status code
     IFS=',' read -ra statusCodeArray <<< "$expectedStatusCodes"
 
-    portName=""
-    for statusCode in "${statusCodeArray[@]}"; do
-        if [ "$portName" != "" ]; then
-            portName="$portName, "
-        fi
-
-        portName="$portName$statusCode"
-    done
-
-    for statusCode in "${statusCodeArray[@]}"; do
-        if [ "$statusCode" == "$returnedStatusCode" ]; then
-            local text="The url \"$url\" returns the expected status code \"$statusCode\""
-
-            if [ ${#statusCodeArray[@]} -gt 1 ]; then
-                text="$text (one of the expected ports: $portName)."
-            else
-                text="$text."
+    local portString=""
+    local statusCodeComparator
+    if [ ${#statusCodeArray[@]} -gt 1 ]; then
+        for statusCodeComparator in "${statusCodeArray[@]}"; do
+            if [ "$portString" != "" ]; then
+                portString="$portString, "
             fi
 
+            local statusCode=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 0)
+
+            portString="$portString$statusCode"
+        done
+    fi
+
+    if [ "$portString" != "" ]; then
+        portString=" (one of the expected ports: $portString)"
+    fi
+
+    # check status code and comparator
+    for statusCodeComparator in "${statusCodeArray[@]}"; do
+
+        # split status code
+        local statusCode=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 0)
+        local comparator=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 1)
+
+        if [ "$statusCode" == "$returnedStatusCode" ]; then
+
+            # status code match, but comparator mismatch
+            if [ "$comparator" != "" ]; then
+                local text="The url \"$url\" returns the expected status code \"$statusCode\"$portString."
+                log 'passed' "$text"
+
+                if  [ "$comparator" != "$comparison" ]; then
+                    local text="The url \"$url\" does not return the given compare string \"$comparator\" (returns \"$comparison\")."
+                    log 'failed' "$text"
+                    return 1
+                else
+                    local text="The url \"$url\" returns the given compare string \"$comparator\"."
+                    log 'passed' "$text"
+                    return 0
+                fi
+            fi
+
+            local text="The url \"$url\" returns the expected status code \"$statusCode\"$portString."
             log 'passed' "$text"
             return 0
         fi
     done
 
-    local text="The url \"$url\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")"
-
-    if [ ${#statusCodeArray[@]} -gt 1 ]; then
-        text="$text (one of the expected ports: $portName)."
-    else
-        text="$text."
-    fi
-
+    local text="The url \"$url\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")$portString."
     log 'failed' "$text"
     return 1
 }

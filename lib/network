@@ -19,9 +19,21 @@ getIpAddressFromUrl()
 # ------------
 getHttpStatusCodeFromUrl()
 {
-    url="$1"   
+    url="$1"
 
-    curl -w "%{http_code}" -o /dev/null -s "$1"
+    # get header
+    header=$(curl -I -s "$1")
+
+      httpCode=$(echo "$header" | grep "HTTP/1." | awk '{print $2}')
+    comparison=""
+
+    case $httpCode in
+        301)
+            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g')
+            ;;
+    esac
+
+    echo "$httpCode" "$comparison"
 }
 
 # ------------
@@ -35,7 +47,7 @@ hasHttpStatusCodeFromUrl()
     url="$1"
     statusCodes="$2"
 
-    returnedStatusCode=$(getHttpStatusCodeFromUrl "$url")
+    read returnedStatusCode comparison < <(getHttpStatusCodeFromUrl "$url")
 
     IFS=',' read -ra statusCodeArray <<< "$statusCodes"
     for statusCode in "${statusCodeArray[@]}"; do

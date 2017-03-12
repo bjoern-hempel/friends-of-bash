@@ -34,7 +34,7 @@ buildUrl()
     fi
 
     # remove protocol
-    url=$(getIndexFromStringSeparatedBySeparator "$url" "://" 1 2 1)
+    url=$(getIndexFromStringSeparatedBySeparator "$url" "://" 1 2)
 
     # remove authentication
     if [ "$auth" != "" ]; then
@@ -57,13 +57,16 @@ buildUrl()
 getUrlAndPorts()
 {
        url="$1"
-    config="$2"
+    config=$(echo "$2" | sed -e 's/:\/\//\[~doublepoint~\]\/\//g')
 
       auth=$(getIndexFromStringSeparatedBySeparator "$config" "@" 0 2)
     config=$(getIndexFromStringSeparatedBySeparator "$config" "@" 1 2)
      ports=$(getIndexFromStringSeparatedBySeparator "$config" ":" 0)
       path=$(getIndexFromStringSeparatedBySeparator "$config" ":" 1)
        url=$(buildUrl "$url" "$path" "$auth")
+
+    # replace [~doublepoint~]// to ://
+    ports=$(echo "$ports" | sed -e 's/\[~doublepoint~\]\/\//:\/\//g')   
 
     echo "$url" "$ports"
 }
