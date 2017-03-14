@@ -1,25 +1,26 @@
 #!/bin/bash
 
-
-
 # ------------
 # Config parser
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-cfgParser ()
+cfgParser()
 { 
   # read the given file
   # print the content with:
   # $ echo "${config[*]}"
   config="$(<$1)" # read the file
+
   # read the config prefix
   configPrefix="${2:-conf}"
+
   # replace 'xyz {' into 'conf.xyz () {' and remove commented lines
-  config=$(echo "${config[*]}" | sed '/^#/d' | sed -r 's/([a-z0-9/\-]+)[ ]*\{/'$configPrefix'.\1 \(\) {/g')
+  config=$(echo "${config[*]}" | sed '/^#/d' | sed -r 's/([a-zA-Z0-9/\-]+)[ ]*\{/'$configPrefix'.\1 \(\) {/g')
+
   # collect function names
-  regex="($configPrefix.([a-z0-9/\-]+))[ ]*\(\)[ ]*\{"
+  regex="($configPrefix.([a-zA-Z0-9/\-]+))[ ]*\(\)[ ]*\{"
   functionNames=""
   confNames=""
   while read -r configLine; do
@@ -32,10 +33,12 @@ cfgParser ()
       confNames="$confNames${BASH_REMATCH[2]}"
     fi 
   done <<< "${config[*]}"
+
   # add variable with function names
   config+=($'\n')
   config+=($'\n'$configPrefix'Functions=('$functionNames')')
   config+=($'\n'$configPrefix's=('$confNames')')
+
   # eval the result
   # print the result with
   # $ echo "${config[*]}"
@@ -43,15 +46,13 @@ cfgParser ()
   eval "$(echo "${config[*]}")"
 }
 
-
-
 # ------------
 # Get the last timestamp from given namespace.
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-getLastTimeFromFile ()
+getLastTimeFromFile()
 {
   local file="$1"
   local namespace="$2"
@@ -59,15 +60,13 @@ getLastTimeFromFile ()
   return 0
 }
 
-
-
 # ------------
 # Set the given timestamp with given namespace.
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-setCurrentTimeToFile ()
+setCurrentTimeToFile()
 {
   local file="$1"
   local namespace="$2"
@@ -76,15 +75,13 @@ setCurrentTimeToFile ()
   return 0
 }
 
-
-
 # ------------
 # Get the last cached value from given namespace.
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-getCachedValue ()
+getCachedValue()
 {
   local file="$1"
   local namespace="$2"
@@ -104,15 +101,13 @@ getCachedValue ()
   return 0
 }
 
-
-
 # ------------
 # Set the given value with given namespace.
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-setCachedValue ()
+setCachedValue()
 {
   local file="$1"
   local namespace="$2"
@@ -145,15 +140,13 @@ setCachedValue ()
   return 0
 }
 
-
-
 # ------------
 # Remove the given linenumber from file.
 #
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-removeLineFromFile ()
+removeLineFromFile()
 {
   local file="$1"
   local line="$2"
@@ -168,8 +161,6 @@ removeLineFromFile ()
   rm "$file.tmp"
 }
 
-
-
 # ------------
 # Executes a given script
 #
@@ -177,7 +168,7 @@ removeLineFromFile ()
 # @version 1.0
 # @date    2017-01-26
 # ------------
-executeScript ()
+executeScript()
 {
     local script="$1"
 
@@ -186,6 +177,4 @@ executeScript ()
         source "$script"
     fi
 }
-
-
 

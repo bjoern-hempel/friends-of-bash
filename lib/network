@@ -29,7 +29,7 @@ getHttpStatusCodeFromUrl()
 
     case $httpCode in
         301)
-            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g')
+            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
             ;;
     esac
 
