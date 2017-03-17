@@ -6,7 +6,7 @@
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-chr ()
+chr()
 {
   [ "$1" -lt 256 ] || return 1
   printf "\\$(printf '%03o' "$1")"
@@ -18,7 +18,7 @@ chr ()
 # @author  Björn Hempel
 # @version 1.0
 # ------------
-getTruncatedText ()
+getTruncatedText()
 {
   local      text="$1"
   local maxlength="$2"
@@ -48,7 +48,7 @@ getSedCompatibleString()
 # @version 1.0
 # @date    2017-02-16
 # ------------
-textHasEqualValue ()
+textHasEqualValue()
 {
     local lines="$1"
     local value="$2"
@@ -74,7 +74,7 @@ textHasEqualValue ()
 # @version 1.0
 # @date    2017-03-10
 # ------------
-function getIndexFromStringSeparatedBySeparator()
+getIndexFromStringSeparatedBySeparator()
 {
     local string="$1"
     local separator="$2"
