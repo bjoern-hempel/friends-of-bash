@@ -94,18 +94,18 @@ isCertificateValid()
 
     # certificate is valid more than $warningDays days
     if [ $differenceValidUntilDays -gt $warningDays ]; then
-        log 'passed' "The certificate from the domain \"$domain\" is valid until \"$validUntilFormated\"."
+        log 'passed' "The certificate from the domain \"$domain\" is valid until \"$COLOR_GREEN$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
         return 0
     fi
 
     # certificate is valid less then $warningDays days
     if [ $differenceValidUntilDays -gt 0 ]; then
-        log 'warning' "The certificate from the domain \"$domain\" is only valid until \"$validUntilFormated\"."
+        log 'warning' "The certificate from the domain \"$domain\" is only valid until \"$COLOR_YELLOW$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
         return 0;
     fi
 
     # certificate is expired.
-    log 'failed' "The certificate from the domain \"$domain\" is not invalid. Expired at \"$validUntilFormated\"."
+    log 'failed' "The certificate from the domain \"$domain\" is not invalid. Expired at \"$COLOR_RED$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
     return 1
 }
 

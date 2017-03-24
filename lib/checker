@@ -45,7 +45,11 @@ isHttpStatusCodeCheck()
     local                 url="$1"
     local expectedStatusCodes="$2"
 
+    local startFormat="$COLOR_CYAN$COLOR_BOLD"
+    local urlFormatted="$startFormat$url$COLOR_NORM"
+
     read returnedStatusCode comparison < <(getHttpStatusCodeFromUrl "$url")
+    local comparisonFormated="$startFormat$comparison$COLOR_NORM"
 
     # split status code
     IFS=',' read -ra statusCodeArray <<< "$expectedStatusCodes"
@@ -59,13 +63,14 @@ isHttpStatusCodeCheck()
             fi
 
             local statusCode=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 0)
+            local statusCodeFormatted="$startFormat$statusCode$COLOR_NORM"
 
-            portString="$portString$statusCode"
+            portString="$portString$statusCodeFormatted"
         done
     fi
 
     if [ "$portString" != "" ]; then
-        portString=" (one of the expected ports: $portString)"
+        portString="\n(one of the expected ports: $portString)"
     fi
 
     # check status code and comparator
@@ -75,31 +80,36 @@ isHttpStatusCodeCheck()
         local statusCode=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 0)
         local comparator=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 1)
 
-        if [ "$statusCode" == "$returnedStatusCode" ]; then
+        local statusCodeFormatted="$startFormat$statusCode$COLOR_NORM"
+        local comparatorFormatted="$startFormat$comparator$COLOR_NORM"
 
+        if [ "$statusCode" == "$returnedStatusCode" ]; then
             # status code match, but comparator mismatch
             if [ "$comparator" != "" ]; then
-                local text="The url \"$url\" returns the expected status code \"$statusCode\"$portString."
-                log 'passed' "$text"
+                local text="The url \"$urlFormatted\" returns the expected status code \"$statusCodeFormatted\"$portString."
 
                 if  [ "$comparator" != "$comparison" ]; then
-                    local text="The url \"$url\" does not return the given compare string \"$comparator\" (returns \"$comparison\")."
+                    local text="$text\nThe url \"$urlFormatted\" does not return the given compare string \"$comparatorFormatted\""
+                    [ ${#comparison} -gt 10 ] && text="$text\n" || text="$text "
+                    text="$text(returns \"$comparisonFormated\")."
                     log 'failed' "$text"
                     return 1
                 else
-                    local text="The url \"$url\" returns the given compare string \"$comparator\"."
+                    local text="$text\nThe url \"$urlFormatted\" returns the given compare string:"
+                    [ ${#comparator} -gt 10 ] && text="$text\n" || text="$text "
+                    text="$text\"$comparatorFormatted\"."
                     log 'passed' "$text"
                     return 0
                 fi
             fi
 
-            local text="The url \"$url\" returns the expected status code \"$statusCode\"$portString."
+            local text="The url \"$urlFormatted\" returns the expected status code \"$statusCodeFormatted\"$portString."
             log 'passed' "$text"
             return 0
         fi
     done
 
-    local text="The url \"$url\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")$portString."
+    local text="The url \"$urlFormatted\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")$portString."
     log 'failed' "$text"
     return 1
 }

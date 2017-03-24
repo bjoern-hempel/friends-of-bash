@@ -1,0 +1,176 @@
+#!/bin/bash
+
+currentNamespacePath=""
+lastOpenNr=0
+lastCloseNr=0
+
+outputContent()
+{
+    local namespacePath="root.$1"
+    local description="$2"
+    local value="$3"
+    local debug=${4:-false}
+    local ident=4
+
+    debug=false
+
+    IFS='.' read -r -a namespaceArray        <<< "$namespacePath"
+    IFS='.' read -r -a currentNamespaceArray <<< "$currentNamespacePath"
+
+    local uniquePath=""
+    local unique=true
+
+    if $debug; then
+        printf "1) current:     %-40s %4s\n" "\"$currentNamespacePath\"" "(${#currentNamespaceArray[@]})"
+    fi
+
+    for namespaceName in "${currentNamespaceArray[@]}"; do
+        [ "$uniquePath" == "" ] && local newUniquePath="$namespaceName" || local newUniquePath="$uniquePath.$namespaceName"
+
+        if $unique; then
+            if [[ "$namespacePath" =~ ^$newUniquePath ]] ; then
+                uniquePath="$newUniquePath"
+            else
+                unique=false
+            fi
+        fi
+    done
+
+    if $debug; then
+        printf "2) wanted:      %-40s %4s\n" "\"$namespacePath\"" "(${#namespaceArray[@]})"
+    fi
+
+    IFS='.' read -r -a uniqueArray <<< "$uniquePath"
+
+    if $debug; then
+        printf "3) unique path: %-40s %4s\n" "\"$uniquePath\"" "(${#uniqueArray[@]})"
+    fi
+
+    local closeNamespacePath=$(echo $currentNamespacePath | sed -e "s/^${uniquePath}[\.]\?//g" )
+    local  openNamespacePath=$(echo $namespacePath        | sed -e "s/^${uniquePath}[\.]\?//g" )
+
+    IFS='.' read -r -a closeNamespaceArray <<< "$closeNamespacePath"
+    IFS='.' read -r -a  openNamespaceArray <<< "$openNamespacePath"
+
+    local closeFromNumber="${#currentNamespaceArray[@]}"
+    local closeToNumber=$((closeFromNumber - ${#closeNamespaceArray[@]}))
+    local closeSum="${#closeNamespaceArray[@]}"
+    local closeString=''
+
+    if [ $closeFromNumber -gt $closeToNumber ]; then
+        for ((i=$closeFromNumber; i>$closeToNumber; i--)); do
+            [ "$closeString" != '' ] && closeString+=', '
+            closeString+=$i
+        done
+    else
+        closeString='---'
+    fi
+
+    if $debug; then
+        printf "4) todo close:  %-40s %4s %s\n" "\"$closeNamespacePath\"" "(${#closeNamespaceArray[@]})" "($closeFromNumber -> $closeToNumber | $closeString)"
+    fi
+
+    local openFromNumber="${#uniqueArray[@]}"
+    local openToNumber=$((openFromNumber + ${#openNamespaceArray[@]}))
+    local openSum="${#openNamespaceArray[@]}"
+    local openString=''
+
+    if [ $openToNumber -gt $openFromNumber ]; then
+        for ((i=$((openFromNumber+1)); i<=$openToNumber; i++)); do
+            [ "$openString" != '' ] && openString+=', '
+            openString+=$i
+        done
+    else
+        openString='---'
+    fi
+
+    if $debug; then
+        printf "5) todo open:   %-40s %4s %s\n" "\"$openNamespacePath\""  "(${#openNamespaceArray[@]})"  "($openFromNumber -> $openToNumber | $openString)"
+    fi
+
+    
+
+    # print close tags
+    if [ $closeFromNumber -gt $closeToNumber ]; then
+        lastCloseNr=0
+        for ((i=$((closeFromNumber - 1)); i>$((closeToNumber - 1)); i--)); do
+            if [ $lastOpenNr -gt 0 ]; then
+                echo
+            fi
+
+            outputIdent $((2 * i + 1)) "}"
+
+            lastOpenNr=0
+
+            if [ $i -eq $closeToNumber ]; then
+                lastCloseNr=$i
+                outputIdent $((2 * i + 0)) "}" false
+            else
+                outputIdent $((2 * i + 0)) "}"
+            fi
+        done
+    fi
+
+    # print open tags
+    
+    if [ $openToNumber -gt $openFromNumber ]; then
+        if [ $closeFromNumber -gt $closeToNumber ]; then
+            if [ $lastCloseNr -eq $openFromNumber ]; then
+                echo ","
+            else
+                echo ""
+            fi
+        fi
+
+        for ((i=$openFromNumber; i<=$((openToNumber - 1)); i++)); do
+            if [ $i -le 0 ]; then
+                echo '{'
+            else
+                outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+            fi
+            outputIdent $((2 * i + 1)) "description: \"Beschreibung\","
+            outputIdent $((2 * i + 1)) "title: \"Titel\","
+            outputIdent $((2 * i + 1)) "data: {"
+
+            lastOpenNr=$i
+        done
+    else
+        if [ $closeFromNumber -gt $closeToNumber ]; then
+            echo ""
+        fi
+    fi
+
+    currentNamespacePath="$namespacePath"
+
+    if $debug; then
+        echo
+    fi
+}
+
+outputFinish()
+{
+    outputContent "" "" ""
+    outputIdent 1 "}"
+    outputIdent 0 "}"
+}
+
+outputIdent()
+{
+    local identNr=${1:-0}
+    local text="${2:-}"
+    local linebreak=${3:-true}
+    local identChar=${4:- }
+    local ident=4
+
+    if [ $identNr -gt 0 ]; then
+        printf "%-$((identNr * $ident))s" "$identChar"
+    fi
+
+    if $linebreak; then
+        echo "$text"
+    else
+        echo -n "$text"
+    fi
+}
+
+
