@@ -118,13 +118,20 @@ outputContent()
                 echo ","
                 outputIdent $((2 * i - 1)) "data: {"
                 outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
-                outputIdent $((2 * i + 1)) "title: \"Titel\","
-                outputIdent $((2 * i + 1)) "description: \"Beschreibung\"" false
             else
                 outputIdent $((2 * i + 0)) "{"
-                outputIdent $((2 * i + 1)) "title: \"Titel\","
-                outputIdent $((2 * i + 1)) "description: \"Beschreibung\"" false
             fi
+
+            local namepath=""
+            for ((j=0; j<${#namespaceArray[@]}; j++)); do
+                [ $j -gt $i ] && continue
+                [ "$namepath" != "" ] && namepath+="."
+                namepath+="${namespaceArray[$j]}"
+            done
+
+            outputIdent $((2 * i + 1)) "path: \"$namepath\""
+            outputIdent $((2 * i + 1)) "title: \"$value\","
+            outputIdent $((2 * i + 1)) "description: \"$description\"" false
 
             lastOpenNr=$i
         done
