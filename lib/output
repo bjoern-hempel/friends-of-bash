@@ -2,13 +2,12 @@
 
 currentNamespacePath=""
 lastOpenNr=0
-lastCloseNr=0
 
 outputContent()
 {
     local namespacePath="root.$1"
-    local description="$2"
-    local value="$3"
+    local description="$3"
+    local value="$2"
     local debug=${4:-false}
     local ident=4
 
@@ -92,7 +91,6 @@ outputContent()
 
     # print close tags
     if [ $closeFromNumber -gt $closeToNumber ]; then
-        lastCloseNr=0
         for ((i=$((closeFromNumber - 1)); i>$((closeToNumber - 1)); i--)); do
             if [ $lastOpenNr -gt 0 ]; then
                 echo
@@ -103,7 +101,6 @@ outputContent()
             lastOpenNr=0
 
             if [ $i -eq $closeToNumber ]; then
-                lastCloseNr=$i
                 outputIdent $((2 * i - 1)) "}" false
             else
                 outputIdent $((2 * i - 1)) "}"
