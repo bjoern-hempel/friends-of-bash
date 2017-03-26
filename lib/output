@@ -1,13 +1,14 @@
 #!/bin/bash
 
 currentNamespacePath=""
-lastOpenNr=0
+lastOpenNr=-1
+lastCloseNr=-1
 
 outputContent()
 {
     local namespacePath="root.$1"
+    local status="$2"
     local description="$3"
-    local value="$2"
     local debug=${4:-false}
     local ident=4
 
@@ -96,14 +97,16 @@ outputContent()
                 echo
             fi
 
-            outputIdent $((2 * i + 0)) "}"
-
-            lastOpenNr=0
+            outputIdent $((2 * i + 0)) "}" false
 
             if [ $i -eq $closeToNumber ]; then
-                outputIdent $((2 * i - 1)) "}" false
+                lastCloseNr=$i
+
+                if [ $lastCloseNr -ne $openFromNumber ] && [ $openToNumber -gt $openFromNumber ]; then
+                    echo && outputIdent $((2 * i - 1)) "}" false
+                fi
             else
-                outputIdent $((2 * i - 1)) "}"
+                echo && outputIdent $((2 * i - 1)) "}" false
             fi
         done
     fi
@@ -112,9 +115,14 @@ outputContent()
     if [ $openToNumber -gt $openFromNumber ]; then
         for ((i=$openFromNumber; i<=$((openToNumber - 1)); i++)); do
             if [ $i -gt 0 ]; then
-                echo ","
-                outputIdent $((2 * i - 1)) "data: {"
-                outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                if [ $lastCloseNr -ne $openFromNumber ]; then
+                    echo ","
+                    outputIdent $((2 * i - 1)) "data: {"
+                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                else
+                    echo ","
+                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                fi
             else
                 outputIdent $((2 * i + 0)) "{"
             fi
@@ -126,9 +134,17 @@ outputContent()
                 namepath+="${namespaceArray[$j]}"
             done
 
-            outputIdent $((2 * i + 1)) "path: \"$namepath\""
-            outputIdent $((2 * i + 1)) "title: \"$value\","
-            outputIdent $((2 * i + 1)) "description: \"$description\"" false
+            outputIdent $((2 * i + 1)) "path: \"$namepath\"" false
+            if [ $i -eq $((openToNumber - 1)) ]; then
+                [ "$status" != "" ] && \
+                [ "$status" != "caption" ] && \
+                echo "," && \
+                outputIdent $((2 * i + 1)) "status: \"$status\"" false
+
+                [ "$description" != "" ] && \
+                echo "," && \
+                outputIdent $((2 * i + 1)) "description: \"$description\"" false
+            fi
 
             lastOpenNr=$i
         done
@@ -148,6 +164,7 @@ outputContent()
 outputFinish()
 {
     outputContent "" "" ""
+    outputIdent 1 "}"
     outputIdent 0 "}"
 }
 
