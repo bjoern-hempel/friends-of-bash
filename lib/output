@@ -115,12 +115,12 @@ outputContent()
     if [ $openToNumber -gt $openFromNumber ]; then
         for ((i=$openFromNumber; i<=$((openToNumber - 1)); i++)); do
             if [ $i -gt 0 ]; then
-                if [ $lastCloseNr -ne $openFromNumber ]; then
+                if [ $closeToNumber -eq $openFromNumber ] && [ $closeFromNumber -gt $closeToNumber ] && [ $i -eq $openFromNumber ]; then
                     echo ","
-                    outputIdent $((2 * i - 1)) "data: {"
                     outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
                 else
                     echo ","
+                    outputIdent $((2 * i - 1)) "data: {"
                     outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
                 fi
             else
