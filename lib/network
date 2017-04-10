@@ -31,6 +31,9 @@ getHttpStatusCodeFromUrl()
         301)
             comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
             ;;
+        302)
+            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
+            ;;
         401)
             comparison=$(echo "$header" | grep 'WWW-Authenticate' | grep -oP 'realm="\K[^"]+')
             ;;

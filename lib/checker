@@ -116,15 +116,28 @@ isHttpStatusCodeCheck()
 
 isDomainAssignedToIpCheck()
 {
-    domain="$1"
-    ip="$2"
+    local domain="$1"
+    local ip="$2"
+    local useHostsFile=${3:-false}
 
-    assignedIp=$(dig A +short "$domain")
+    # real name to ip translation
+    local assignedIp=$(dig A +short "$domain")
 
     # check passed
     if [ "$ip" == "$assignedIp" ]; then
         log 'passed' "The given domain \"$domain\" is assigned to ip \"$ip\"."
         return 0
+    fi
+
+    # try also to use the /etc/hosts
+    if $useHostsFile; then
+        assignedIp=$(getent ahostsv4 "$domain" | cut -d' ' -f1 | sort -u)
+
+        # check passed
+        if [ "$ip" == "$assignedIp" ]; then
+            log 'passed' "The given domain \"$domain\" is assigned to ip \"$ip\"."
+            return 0
+        fi
     fi
 
     # check failed
