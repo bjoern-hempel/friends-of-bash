@@ -1,18 +1,166 @@
 #!/bin/bash
 
+# EXAMPLE:
+# --------
+#
+# OUTPUT_CONTENT_TYPE='json' # or log
+#
+# setOutputContentType "$OUTPUT_CONTENT_TYPE"
+#
+# outputContent "ports"          "caption" "Die Beschreibung für den Port Bereich."
+# outputContent "ports.80"       "success" "Port 80 ist offen."
+# outputContent "ports.443"      "success" "Port 443 ist offen."
+# outputContent "ports.111"      "failed"  "Port 111 ist geöffnet."
+# outputContent "status"         "caption" "Status Code Beschreibung."
+# outputContent "status.typo3"   "success" "Der Typo3 Pfad Test war erfolgreich."
+# outputContent "ssl.nonwww"     "success" "The certificate is valid"
+# outputContent "ssl.www"        "success" "The certificate is valid"
+# outputContent "ssl.www.check2" "success" "The certificate 2 is valid"
+# outputContent "ssl.www.check3" "success" "The certificate 3 is valid"
+# outputFinish
+#
+
+# some vars
 currentNamespacePath=""
 lastOpenNr=-1
-lastCloseNr=-1
+outputType="json"
+availableOutputTypes=(json log)
 
+# ------------
+# Output content type setter.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
+setOutputContentType()
+{
+    local type="$1"
+
+    for availableOutputType in "${availableOutputTypes[@]}"; do
+        if [ "$availableOutputType" == "$type" ]; then
+            outputType="$type"
+            return 0
+        fi
+    done
+
+    echo "Unknown given type \"$type\"."
+    exit
+}
+
+# ------------
+# Output content switch
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
 outputContent()
+{
+    case "${outputType^^}" in
+        JSON)
+            _outputContentJson "$1" "$2" "$3" "$4" "$5"
+            ;;
+
+        LOG)
+            _outputContentLog "$1" "$2" "$3" "$4" "$5"
+            ;;
+
+        *)
+            echo "Unknown given type \"${outputType^^}\"."
+            ;;
+    esac
+}
+
+# ------------
+# Output content function: log
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
+_outputContentLog()
+{
+    local      namespacePath="$1"
+    local             status="${2^^}"
+    local            logText="$3"
+    local              debug=${4:-false}
+    local              ident=${5:-4}
+    local            showLog=${6:-false}
+    local               date=`date "+%Y-%m-%d %H:%M:%S"`
+    local      numberOfLines=$(echo -e "$logText" | wc -l)
+    local multilineSignFirst='┏━  '
+    local      multilineSign='┃   '
+    local  multilineSignLast='┗━  '
+    local             spacer=''
+
+    if [ "$status" == "" ]; then
+        return 0
+    fi
+
+    # disabled output
+    if $showLog; then
+        return 0
+    fi
+
+    case "$status" in
+        SUCCESS)
+            status="$COLOR_GREEN$status\033[0m"
+            ;;
+        PASSED)
+            status="\033[1;32m"$status"\033[0m"
+            spacer=' '
+            ;;
+        WARNING)
+            status="\033[1;33m\033[5m"$status"\033[0m"
+            ;;
+        ERROR)
+            status="\033[1;31m\033[5m"$status"\033[0m"
+            spacer='  '
+            ;;
+        FAILED)
+            status="\033[1;31m\033[5m"$status"\033[0m"
+            spacer=' '
+            ;;
+        INFO)
+            status="\033[1;36m"$status"\033[0m"
+            spacer='   '
+            ;;
+        REMOTE)
+            status="\033[1;35m"$status"\033[0m"
+            spacer=' '
+            ;;
+        HEADER)
+            status="\033[1;34m"$status"\033[0m"
+            logText=${logText^^}
+            spacer=' '
+            ;;
+        CAPTION)
+            status="\033[1;34m"$status"\033[0m"
+            logText=${logText^^}
+            ;;
+    esac
+
+    # check multiline && replace line breaks
+    if [ "$numberOfLines" -gt 1 ]; then
+        logText="$multilineSignFirst$logText"
+        logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n                                $multilineSign/g")
+        logText=$(echo -en "$logText" | sed '$s/┃ /┗━/g')
+    fi
+
+    echo -e "[$date] [$status]$spacer $logText"
+}
+
+# ------------
+# Output content function: json
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
+_outputContentJson()
 {
     local namespacePath="root.$1"
     local status="$2"
     local description="$3"
     local debug=${4:-false}
-    local ident=4
-
-    debug=false
+    local ident=${5:-4}
 
     IFS='.' read -r -a namespaceArray        <<< "$namespacePath"
     IFS='.' read -r -a currentNamespaceArray <<< "$currentNamespacePath"
@@ -100,9 +248,7 @@ outputContent()
             outputIdent $((2 * i + 0)) "}" false
 
             if [ $i -eq $closeToNumber ]; then
-                lastCloseNr=$i
-
-                if [ $lastCloseNr -ne $openFromNumber ] && [ $openToNumber -gt $openFromNumber ]; then
+                if [ $i -ne $openFromNumber ] && [ $openToNumber -gt $openFromNumber ]; then
                     echo && outputIdent $((2 * i - 1)) "}" false
                 fi
             else
@@ -135,6 +281,8 @@ outputContent()
             done
 
             outputIdent $((2 * i + 1)) "path: \"$namepath\"" false
+
+            # if last opened area: print status and description if given
             if [ $i -eq $((openToNumber - 1)) ]; then
                 [ "$status" != "" ] && \
                 [ "$status" != "caption" ] && \
@@ -161,6 +309,12 @@ outputContent()
     fi
 }
 
+# ------------
+# Output content function: closer
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
 outputFinish()
 {
     outputContent "" "" ""
@@ -168,6 +322,12 @@ outputFinish()
     outputIdent 0 "}"
 }
 
+# ------------
+# Output content helper function: outputIdent
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
 outputIdent()
 {
     local identNr=${1:-0}
@@ -176,15 +336,18 @@ outputIdent()
     local identChar=${4:- }
     local ident=4
 
-    if [ $identNr -gt 0 ]; then
-        printf "%-$((identNr * $ident))s" "$identChar"
-    fi
+    case $outputType in
+        json)
+            if [ $identNr -gt 0 ]; then
+                printf "%-$((identNr * $ident))s" "$identChar"
+            fi
 
-    if $linebreak; then
-        echo "$text"
-    else
-        echo -n "$text"
-    fi
+            if $linebreak; then
+                echo "$text"
+            else
+                echo -n "$text"
+            fi
+            ;;
+    esac
 }
-
 
