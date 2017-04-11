@@ -161,6 +161,8 @@ _outputContentJson()
     local description="$3"
     local debug=${4:-false}
     local ident=${5:-4}
+    local timestamp=$(date +"%s")
+    local timeFormated=$(date -d @$timestamp)
 
     IFS='.' read -r -a namespaceArray        <<< "$namespacePath"
     IFS='.' read -r -a currentNamespaceArray <<< "$currentNamespacePath"
@@ -263,35 +265,55 @@ _outputContentJson()
             if [ $i -gt 0 ]; then
                 if [ $closeToNumber -eq $openFromNumber ] && [ $closeFromNumber -gt $closeToNumber ] && [ $i -eq $openFromNumber ]; then
                     echo ","
-                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                    outputIdent $((2 * i + 0)) "\"${namespaceArray[i]}\": {"
                 else
                     echo ","
-                    outputIdent $((2 * i - 1)) "data: {"
-                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                    outputIdent $((2 * i - 1)) "\"data\": {"
+                    outputIdent $((2 * i + 0)) "\"${namespaceArray[i]}\": {"
                 fi
             else
                 outputIdent $((2 * i + 0)) "{"
             fi
 
             local namepath=""
+            local namepathShort=""
             for ((j=0; j<${#namespaceArray[@]}; j++)); do
                 [ $j -gt $i ] && continue
                 [ "$namepath" != "" ] && namepath+="."
                 namepath+="${namespaceArray[$j]}"
+                if [ "${namespaceArray[$j]}" != "root" ]; then
+                    [ "$namepathShort" != "" ] && namepathShort+="."
+                    namepathShort+="${namespaceArray[$j]}"
+                fi
             done
 
-            outputIdent $((2 * i + 1)) "path: \"$namepath\"" false
+            outputIdent $((2 * i + 1)) "\"path\": \"$namepath\"" false
+
+            [ "$namepathShort" != "" ] && \
+            echo "," && \
+            outputIdent $((2 * i + 1)) "\"pathShort\": \"$namepathShort\"" false
 
             # if last opened area: print status and description if given
             if [ $i -eq $((openToNumber - 1)) ]; then
                 [ "$status" != "" ] && \
                 [ "$status" != "caption" ] && \
                 echo "," && \
-                outputIdent $((2 * i + 1)) "status: \"$status\"" false
+                outputIdent $((2 * i + 1)) "\"status\": \"$status\"" false
 
                 [ "$description" != "" ] && \
                 echo "," && \
-                outputIdent $((2 * i + 1)) "description: \"$description\"" false
+                outputIdent $((2 * i + 1)) "\"description\": \"$description\"" false
+            fi
+
+            if [ $i -lt 1 ]; then
+                echo "," && \
+                outputIdent $((2 * i + 1)) "\"timestamp\": \"$timestamp\"" false
+
+                echo "," && \
+                outputIdent $((2 * i + 1)) "\"timeFormated\": \"$timeFormated\"" false
+
+                echo "," && \
+                outputIdent $((2 * i + 1)) "\"creator\": \"$BASH_LIB_NAME $BASH_LIB_VERSION\"" false
             fi
 
             lastOpenNr=$i
