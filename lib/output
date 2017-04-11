@@ -158,7 +158,7 @@ _outputContentJson()
 {
     local namespacePath="root.$1"
     local status="$2"
-    local description="$3"
+    local description=$(echo -e "$3" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g')
     local debug=${4:-false}
     local ident=${5:-4}
     local timestamp=$(date +"%s")
