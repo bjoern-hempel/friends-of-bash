@@ -182,7 +182,7 @@ _doOutputContent()
 
             # compress json
             if [ "$outputClass" == "JSON" ]; then
-                output=$(echo -n "$output" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g')
+                output=$(echo -n "$output" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g' | sed 's/:[ ]\+"/:"/g')
             fi
 
             echo -en "$output" >> "$outputLocation"
