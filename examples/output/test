@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# ------
+# Example:
+#
+# 1) ./test -t log:stdout -t "log:>>/var/www/de/ixno/dashboard/log/test.log" -t "json:>/var/www/de/ixno/dashboard/json/test.json"
+# 2) ./test --show-json
+# 3) ./test --show-log
+# ------
+
+# include the libraries
+root="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+source "$root/../../lib/all"
+
+# declare parameter list array
+PARAMETERS=()
+
+# read arguments
+while [[ $# > 0 ]]; do
+    case "$1" in
+        #
+        # log option (2 parameter)
+        #
+        -t|--type)
+            setOutputContentType "$2"
+            shift
+            ;;
+        -t=*|--type=*)
+            setOutputContentType "${1#*=}"
+            ;;
+        --show-json)
+            setOutputContentType "json:stdout"
+            ;;
+        --show-log)
+            setOutputContentType "log:stdout"
+            ;;
+
+        #
+        # collect all unknown parameters
+        #
+        *)
+            PARAMETERS+=("$1")
+            ;;
+    esac
+    shift
+done
+
+outputContent "ports"          "caption" "Die Beschreibung für den Port Bereich."
+outputContent "ports.80"       "success" "Port 80 ist offen.\nMit Umbruch."
+#outputContent "ports.443"      "success" "Port 443 ist offen."
+#outputContent "ports.111"      "failed"  "Port ${COLOR_BLUE}111${COLOR_NORM} ist geöffnet.\nMit Umbruch"
+#outputContent "status"         "caption" "Status Code Beschreibung."
+#outputContent "status.typo3"   "success" "Der Typo3 Pfad Test war erfolgreich."
+#outputContent "ssl.nonwww"     "success" "The certificate is valid"
+#outputContent "ssl.www"        "success" "The certificate is valid"
+#outputContent "ssl.www.check2" "success" "The certificate 2 is valid"
+#outputContent "ssl.www.check3" "success" "The certificate 3 is valid"
+outputFinish
+
