@@ -9,7 +9,8 @@
 # ------
 
 # include the libraries
-root="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+filename=$(readlink ${BASH_SOURCE[0]})
+root=$(dirname "$filename")
 source "$root/../../lib/all"
 
 # declare parameter list array
