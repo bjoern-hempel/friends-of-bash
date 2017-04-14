@@ -47,13 +47,13 @@ done
 
 outputContent "ports"          "caption" "Die Beschreibung für den Port Bereich."
 outputContent "ports.80"       "success" "Port 80 ist offen.\nMit Umbruch."
-#outputContent "ports.443"      "success" "Port 443 ist offen."
-#outputContent "ports.111"      "failed"  "Port ${COLOR_BLUE}111${COLOR_NORM} ist geöffnet.\nMit Umbruch"
-#outputContent "status"         "caption" "Status Code Beschreibung."
-#outputContent "status.typo3"   "success" "Der Typo3 Pfad Test war erfolgreich."
-#outputContent "ssl.nonwww"     "success" "The certificate is valid"
-#outputContent "ssl.www"        "success" "The certificate is valid"
-#outputContent "ssl.www.check2" "success" "The certificate 2 is valid"
-#outputContent "ssl.www.check3" "success" "The certificate 3 is valid"
+outputContent "ports.443"      "success" "Port 443 ist offen."
+outputContent "ports.111"      "failed"  "Port ${COLOR_BLUE}111${COLOR_NORM} ist geöffnet.\nMit Umbruch"
+outputContent "status"         "caption" "Status Code Beschreibung."
+outputContent "status.typo3"   "success" "Der Typo3 Pfad Test war erfolgreich."
+outputContent "ssl.nonwww"     "success" "The certificate is valid"
+outputContent "ssl.www"        "success" "The certificate is valid"
+outputContent "ssl.www.check2" "success" "The certificate 2 is valid"
+outputContent "ssl.www.check3" "success" "The certificate 3 is valid"
 outputFinish
 
