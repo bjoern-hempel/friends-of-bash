@@ -170,12 +170,19 @@ _doOutputContent()
         if [ "$outputLocation" == "stdout" ]; then
             echo -en "$output"
         else
+            # create file if it does not exist
             if [ ! -f "$outputLocation" ]; then
                 touch "$outputLocation"
             fi
 
+            # remove colors
             if [ "$outputClass" != "JSON" ]; then
                 output=$(echo -e "$output" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g')
+            fi
+
+            # compress json
+            if [ "$outputClass" == "JSON" ]; then
+                output=$(echo -n "$output" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g')
             fi
 
             echo -en "$output" >> "$outputLocation"
