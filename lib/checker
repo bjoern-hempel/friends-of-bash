@@ -75,6 +75,7 @@ isHttpStatusCodeCheck()
 
     # check status code and comparator
     for statusCodeComparator in "${statusCodeArray[@]}"; do
+        ((statusCodeCounter++))
 
         # split status code
         local statusCode=$(getIndexFromStringSeparatedBySeparator "$statusCodeComparator" "=" 0)
@@ -92,25 +93,25 @@ isHttpStatusCodeCheck()
                     local text="$text\nThe url \"$urlFormatted\" does not return the given compare string \"$comparatorFormatted\""
                     [ ${#comparison} -gt 10 ] && text="$text\n" || text="$text "
                     text="$text(returns \"$comparisonFormated\")."
-                    log 'failed' "$text"
+                    outputContent "statusCodes.$statusCodeCounter" "failed" "$text"
                     return 1
                 else
                     local text="$text\nThe url \"$urlFormatted\" returns the given compare string:"
                     [ ${#comparator} -gt 10 ] && text="$text\n" || text="$text "
                     text="$text\"$comparatorFormatted\"."
-                    log 'passed' "$text"
+                    outputContent "statusCodes.$statusCodeCounter" "passed" "$text"
                     return 0
                 fi
             fi
 
             local text="The url \"$urlFormatted\" returns the expected status code \"$statusCodeFormatted\"$portString."
-            log 'passed' "$text"
+            outputContent "statusCodes.$statusCodeCounter" "passed" "$text"
             return 0
         fi
     done
 
     local text="The url \"$urlFormatted\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")$portString."
-    log 'failed' "$text"
+    outputContent "statusCodes.$statusCodeCounter" "failed" "$text"
     return 1
 }
 
