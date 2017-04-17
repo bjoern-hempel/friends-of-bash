@@ -419,14 +419,16 @@ _outputContentJson()
     # print open tags 
     if [ $openToNumber -gt $openFromNumber ]; then
         for ((i=$openFromNumber; i<=$((openToNumber - 1)); i++)); do
+            local namespaceTranslated=$(echo "${namespaceArray[i]}" | sed -r 's/___/\./g')
+
             if [ $i -gt 0 ]; then
                 if [ $closeToNumber -eq $openFromNumber ] && [ $closeFromNumber -gt $closeToNumber ] && [ $i -eq $openFromNumber ]; then
                     returnValue+=','$'\n'
-                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceArray[i]}\": {")$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceTranslated}\": {")$'\n'
                 else
                     returnValue+=','$'\n'
                     returnValue+=$(outputIdent $((2 * i - 1)) "\"data\": {")$'\n'
-                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceArray[i]}\": {")$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceTranslated}\": {")$'\n'
                 fi
             else
                 returnValue+=$(outputIdent $((2 * i + 0)) "{")$'\n'
