@@ -6,10 +6,10 @@ isPingableCheck()
     ip="$1"
 
     if isPingable "$ip"; then
-        log 'passed' "The system with ip $ip is running"
+        outputContent "system.awake" "passed" "The system with ip $ip is running"
         return 0
     else
-        log 'failed' "The system with ip $ip is not pingable"
+        outputContent "system.awake" "failed" "The system with ip $ip is not pingable"
         return 1
     fi
 }
@@ -21,10 +21,10 @@ isPortOpenCheck()
     port="$2"
 
     if isPortOpen "$ip" "$port"; then
-        log 'passed' "The port \"$port\" on system with ip \"$ip\" is open."
+        outputContent "ports.positive.$port" "passed" "The port \"$port\" on system with ip \"$ip\" is open."
         return 0
     else
-        log 'failed' "The port \"$port\" on system with ip \"$ip\" is not open."
+        outputContent "ports.positive.$port" "failed" "The port \"$port\" on system with ip \"$ip\" is not open."
         return 1
     fi
 }
@@ -32,10 +32,10 @@ isPortOpenCheck()
 isNotPortOpenCheck()
 {
     if ! isPortOpen "$ip" "$port"; then
-        log 'passed' "The port \"$port\" on system with ip \"$ip\" is closed."
+        outputContent "ports.negative.$port" "passed" "The port \"$port\" on system with ip \"$ip\" is closed."
         return 0
     else
-        log 'failed' "The port \"$port\" on system with ip \"$ip\" is not closed."
+        outputContent "ports.negative.$port" "failed" "The port \"$port\" on system with ip \"$ip\" is not closed."
         return 1
     fi
 }
@@ -117,6 +117,7 @@ isHttpStatusCodeCheck()
 isDomainAssignedToIpCheck()
 {
     local domain="$1"
+    local domainUnderstringified=$(echo "$domain" | sed -r 's/[\.]+/___/g')
     local ip="$2"
     local useHostsFile=${3:-false}
 
@@ -125,7 +126,7 @@ isDomainAssignedToIpCheck()
 
     # check passed
     if [ "$ip" == "$assignedIp" ]; then
-        log 'passed' "The given domain \"$domain\" is assigned to ip \"$ip\"."
+        outputContent "domains.$domainUnderstringified" "passed" "The given domain \"$domain\" is assigned to ip \"$ip\"."
         return 0
     fi
 
@@ -135,13 +136,13 @@ isDomainAssignedToIpCheck()
 
         # check passed
         if [ "$ip" == "$assignedIp" ]; then
-            log 'passed' "The given domain \"$domain\" is assigned to ip \"$ip\"."
+            outputContent "domains.$domainUnderstringified" "passed" "The given domain \"$domain\" is assigned to ip \"$ip\"."
             return 0
         fi
     fi
 
     # check failed
-    log 'failed' "The given domain \"$domain\" is not assigned to ip $ip. Assigned ip: $assignedIp"
+    outputContent "domains.$domainUnderstringified" "failed" "The given domain \"$domain\" is not assigned to ip $ip. Assigned ip: $assignedIp"
     return 1
 }
 

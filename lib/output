@@ -3,6 +3,7 @@
 # EXAMPLE:
 # --------
 #
+# resetOutputVars 50
 # setOutputContentType "log:stdout"
 # setOutputContentType "log:/path/to/log/test.log"
 # setOutputContentType "json:/path/to/json/test.json"
@@ -20,13 +21,29 @@
 # outputFinish
 #
 
-# some vars
+# some settings
+availableOutputTypes=(json log)
+outputStandard='log:stdout'
+addSpacesNumberBeforeTheLogText=30
+
+# some vars (in operation)
 currentNamespacePath=""
 lastOpenNr=-1
-outputType="json"
-availableOutputTypes=(json log)
 outputSetting=()
-outputStandard='log:stdout'
+
+# ------------
+# Reset vars.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-16)
+# ------------
+resetOutputVars()
+{
+    currentNamespacePath=""
+    lastOpenNr=-1
+    outputSetting=()
+    addSpacesNumberBeforeTheLogText=${1:-30}
+}
 
 # ------------
 # Output content type setter.
@@ -119,7 +136,7 @@ outputContent()
     for setting in "${outputSetting[@]}"; do
         IFS=':' read -ra settingArray <<< "$setting"
 
-        _doOutputContent "${settingArray[0]}" "${settingArray[1]}" "$1" "$2" "$3" "$4" "$5" $outputLast
+        _doOutputContent "${settingArray[0]}" "${settingArray[1]}" "$1" "$2" "$3" "$4" "$5" $outputLast $addSpacesNumberBeforeTheLogText
     done
 }
 
@@ -146,6 +163,7 @@ _doOutputContent()
     local outputLocation="$2"
     local output=""
     local outputLast=${8:-false}
+    local addSpacesToLogTextNumber=${9:-30}
 
     case "$outputClass" in
         JSON)
@@ -157,11 +175,11 @@ _doOutputContent()
             ;;
 
         LOG)
-            _outputContentLog output "$3" "$4" "$5" "$6" "$7"
+            _outputContentLog output "$3" "$4" "$5" "$6" "$7" false $addSpacesToLogTextNumber
             ;;
 
         *)
-            echo "Unknown given type \"${outputType^^}\"."
+            echo "Unknown given type \"$outputClass\"."
             return 1
             ;;
     esac
@@ -199,20 +217,21 @@ _doOutputContent()
 # ------------
 _outputContentLog()
 {
-    local         _resultvar="$1"
-    local      namespacePath="$2"
-    local             status="${3^^}"
-    local            logText="$4"
-    local              debug=${5:-false}
-    local              ident=${6:-4}
-    local            showLog=${7:-false}
-    local               date=`date "+%Y-%m-%d %H:%M:%S"`
-    local      numberOfLines=$(echo -e "$logText" | wc -l)
-    local multilineSignFirst='┏━  '
-    local      multilineSign='┃   '
-    local  multilineSignLast='┗━  '
-    local             spacer=''
-    local        returnValue=''
+    local               _resultvar="$1"
+    local            namespacePath="$2"
+    local                   status="${3^^}"
+    local                  logText="$4"
+    local                    debug=${5:-false}
+    local                    ident=${6:-4}
+    local                  showLog=${7:-false}
+    local addSpacesToLogTextNumber=${8:-0}
+    local                     date=`date "+%Y-%m-%d %H:%M:%S"`
+    local            numberOfLines=$(echo -e "$logText" | wc -l)
+    local       multilineSignFirst='┏━  '
+    local            multilineSign='┃   '
+    local        multilineSignLast='┗━  '
+    local                   spacer=''
+    local              returnValue=''
 
     if [ "$status" == "" ]; then
         return 0
@@ -261,14 +280,25 @@ _outputContentLog()
             ;;
     esac
 
+    if [ $addSpacesToLogTextNumber -gt 0 ]; then
+        local addSpacesLogTextNumber=$(($addSpacesToLogTextNumber - 2 - ${#namespacePath}))
+        local addSpacesLogText=$(printf ' %.0s' $(seq 1 $addSpacesLogTextNumber))
+    else
+        local addSpacesLogTextNumber=0
+        local addSpacesLogText=""
+    fi
+
     # check multiline && replace line breaks
     if [ "$numberOfLines" -gt 1 ]; then
+        local addSpacesNumber=$((35 + ${#namespacePath} + $addSpacesLogTextNumber))
+        local       addSpaces=$(printf ' %.0s' $(seq 1 $addSpacesNumber))
+
         logText="$multilineSignFirst$logText"
-        logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n                                $multilineSign/g")
+        logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n$addSpaces$multilineSign/g")
         logText=$(echo -en "$logText" | sed '$s/┃ /┗━/g')
     fi
 
-    returnValue+=$(echo -e "[$date] [$status]$spacer $logText")$'\n'
+    returnValue+=$(echo -e "[$date] [$status]$spacer [$namespacePath] $addSpacesLogText$logText")$'\n'
 
     eval $_resultvar="'$returnValue'"
 }
@@ -284,7 +314,7 @@ _outputContentJson()
     local         _resultvar="$1"
     local      namespacePath="root.$2"
     local             status="$3"
-    local        description=$(echo -e "$4" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/\\n/\\\\n/g')
+    local        description=$(echo -e "$4" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/\\n/\\\\n/g' | sed 's/"/\\"/g')
     local              debug=${5:-false}
     local              ident=${6:-4}
     local          timestamp=$(date +"%s")
