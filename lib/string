@@ -111,4 +111,15 @@ getUnderlinedString()
     echo "$1" | sed -r 's/[\.]+/___/g'
 }
 
+# ------------
+# Returns a dotted string.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-04-18
+# ------------
+getDottedString()
+{
+    echo "$1" | sed -r 's/___/\./g'
+}
 

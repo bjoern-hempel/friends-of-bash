@@ -35,3 +35,59 @@ sendMailTimeFiltered ()
 
 
 
+
+# ------------
+# Send an email.
+# You can use it inside a loop. It sends only a mail,
+# if the last mail is more than $timeDistance away.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-04-18)
+# ------------
+sendMailTimeFiltered2 ()
+{
+    local      subject="$1"
+    local         text="$2"
+    local    recipient="$3"
+    local         from="$4"
+    local     timeFile="$5"
+    local timeDistance=${6:-300}
+
+    # remove the log date of the given text (because this is changed every time and the sh1sum calculation doesn't work
+    namespace="$recipient/"$(echo -ne "$text" | sed 's/\[[0-9]\{4,4\}-[0-9]\{2,2\}-[0-9]\{2,2\} [0-9]\{2,2\}:[0-9]\{2,2\}:[0-9]\{2,2\}\] //g' | sha1sum | sed 's/ .*//')
+
+       lastTimestamp=$(getLastTimeFromFile "$timeFile" "$namespace")
+    currentTimestamp=$(getCurrentTimestamp)
+
+    # the last email is not so long ago - stop here
+    if [ "$(($currentTimestamp - $lastTimestamp))" -lt "$timeDistance" ]; then
+        return 1
+    fi
+
+    # send email
+    echo -ne "$text" | mail -s "$subject" -a "From: $from" "$recipient"
+
+    # write new status
+    setCurrentTimeToFile "$timeFile" "$namespace"
+
+    # return success status
+    return 0
+}
+
+
+sendMails()
+{
+    local      subject="$1"
+    local         text="$2"
+    local   recipients="$3"
+    local         from="$4"
+    local     timeFile="$5"
+    local timeDistance=${6:-300}
+
+    IFS=',' read -r -a recipientArray <<< "$recipients"
+
+    for recipient in "${recipientArray[@]}"; do
+        sendMailTimeFiltered2 "$subject" "$text" "$recipient" "$from" "$timeFile" $timeDistance
+    done
+}
+

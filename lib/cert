@@ -126,11 +126,11 @@ isChainCertificateVerified()
     local status=$(openssl verify "$chainFile" | grep ": OK")
 
     if [ "$status" != "" ]; then
-        outputContent "certificates.${domainUnderlined}.chain" "passed" "The chainfile from the issuer \"$issuer\" was successfully verified."
+        outputContent "certificates.${domainUnderlined}.chain" "passed" "The chainfile from the issuer\n\"$issuer\"\nwas successfully verified."
         return 0;
     fi
 
-    outputContent "certificates.${domainUnderlined}.chain" "failed" "The chainfile from the issuer \"$issuer\" was not successfully verified."
+    outputContent "certificates.${domainUnderlined}.chain" "failed" "The chainfile from the issuer\n\"$issuer\"\nwas not successfully verified."
     return 1
 }
 

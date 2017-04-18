@@ -218,7 +218,7 @@ _doOutputContent()
 _outputContentLog()
 {
     local               _resultvar="$1"
-    local            namespacePath="$2"
+    local            namespacePath=$(getDottedString "$2")
     local                   status="${3^^}"
     local                  logText="$4"
     local                    debug=${5:-false}
