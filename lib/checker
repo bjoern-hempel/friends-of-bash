@@ -88,7 +88,20 @@ isHttpStatusCodeCheck()
             if [ "$comparator" != "" ]; then
                 local text="The url \"$urlFormatted\" returns the expected status code \"$statusCodeFormatted\"$portString."
 
-                if  [ "$comparator" != "$comparison" ]; then
+                local comparisonMatch=false
+
+                # check comparison string
+                case "$statusCode" in
+                    200)
+                        [[ "$comparison" =~ $comparator ]] && comparisonMatch=true
+                        ;;
+
+                    *)
+                        [ "$comparison" == "$comparator"  ] && comparisonMatch=true
+                        ;;
+                esac
+
+                if ! $comparisonMatch; then
                     local text="$text\nThe url \"$urlFormatted\" does not return the given compare string \"$comparatorFormatted\""
                     [ ${#comparison} -gt 10 ] && text="$text\n" || text="$text "
                     text="$text(returns \"$comparisonFormated\")."
