@@ -99,3 +99,16 @@ getIndexFromStringSeparatedBySeparator()
     fi
 }
 
+# ------------
+# Returns an underlined string.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0
+# @date    2017-04-17
+# ------------
+getUnderlinedString()
+{
+    echo "$1" | sed -r 's/[\.]+/___/g'
+}
+
+

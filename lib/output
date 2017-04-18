@@ -3,9 +3,10 @@
 # EXAMPLE:
 # --------
 #
-# OUTPUT_CONTENT_TYPE='json' # or log
-#
-# setOutputContentType "$OUTPUT_CONTENT_TYPE"
+# resetOutputVars 50
+# setOutputContentType "log:stdout"
+# setOutputContentType "log:/path/to/log/test.log"
+# setOutputContentType "json:/path/to/json/test.json"
 #
 # outputContent "ports"          "caption" "Die Beschreibung für den Port Bereich."
 # outputContent "ports.80"       "success" "Port 80 ist offen."
@@ -20,11 +21,29 @@
 # outputFinish
 #
 
-# some vars
+# some settings
+availableOutputTypes=(json log)
+outputStandard='log:stdout'
+addSpacesNumberBeforeTheLogText=30
+
+# some vars (in operation)
 currentNamespacePath=""
 lastOpenNr=-1
-outputType="json"
-availableOutputTypes=(json log)
+outputSetting=()
+
+# ------------
+# Reset vars.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-16)
+# ------------
+resetOutputVars()
+{
+    currentNamespacePath=""
+    lastOpenNr=-1
+    outputSetting=()
+    addSpacesNumberBeforeTheLogText=${1:-30}
+}
 
 # ------------
 # Output content type setter.
@@ -34,16 +53,73 @@ availableOutputTypes=(json log)
 # ------------
 setOutputContentType()
 {
-    local type="$1"
+    local setting="$1"
 
+    IFS=':' read -ra settingArray <<< "$setting"
+
+    local    outputClass="${settingArray[0]^^}"
+    local outputLocation="${settingArray[1]}"
+
+    # check if stdout is already available
+    if [ "$outputLocation" == "stdout" ]; then
+        for setting in "${outputSetting[@]}"; do
+            IFS=':' read -ra settingArray <<< "$setting"
+            if [ "${settingArray[1]}" == "stdout" ]; then
+                echo -e "${COLOR_RED}${COLOR_BOLD}setOutputContentType: Only one stdout stream is available. Don't use it multiple.${COLOR_NORM}"
+                exit
+            fi
+        done
+    fi
+
+    # check available types
     for availableOutputType in "${availableOutputTypes[@]}"; do
-        if [ "$availableOutputType" == "$type" ]; then
-            outputType="$type"
+        if [ "${availableOutputType^^}" == "$outputClass" ]; then
+            if [ "$outputLocation" != "stdout" ]; then
+                append=false
+
+                # append
+                if [ "${outputLocation:0:2}" == ">>" ]; then
+                    outputLocation="${outputLocation: -${#outputLocation}+2}"
+                    append=true
+                fi
+
+                # new
+                if [ "${outputLocation:0:1}" == ">" ]; then
+                    outputLocation="${outputLocation: -${#outputLocation}+1}"
+                fi
+
+                local outputDirectory=$(dirname "$outputLocation")
+
+                # check log directory
+                if [ ! -d "$outputDirectory" ]; then
+                    echo -e "${COLOR_RED}${COLOR_BOLD}setOutputContentType: The directory \"$outputDirectory\" is not available.${COLOR_NORM}"
+                    exit
+                fi
+
+                # check if directory is writeable
+                if [ ! -w "$outputDirectory" ]; then
+                    echo -e "${COLOR_RED}${COLOR_BOLD}setOutputContentType: The directory \"$outputDirectory\" is not writeable.${COLOR_NORM}"
+                    exit
+                fi
+
+                # prepare log file
+                if $append; then
+                    touch "$outputLocation"
+                else
+                    echo -n "" > "$outputLocation"
+                fi
+
+                if [ ! -f "$outputLocation" ]; then
+                    echo -e "${COLOR_RED}${COLOR_BOLD}setOutputContentType: Was not able to create log file \"$outputLocation\".${COLOR_NORM}"
+                fi
+            fi
+
+            outputSetting+=("${outputClass,,}:$outputLocation")
             return 0
         fi
     done
 
-    echo "Unknown given type \"$type\"."
+    echo "Unknown given type \"${settingArray[0]}\"."
     exit
 }
 
@@ -55,19 +131,82 @@ setOutputContentType()
 # ------------
 outputContent()
 {
-    case "${outputType^^}" in
+    local outputLast=${6:-false}
+
+    for setting in "${outputSetting[@]}"; do
+        IFS=':' read -ra settingArray <<< "$setting"
+
+        _doOutputContent "${settingArray[0]}" "${settingArray[1]}" "$1" "$2" "$3" "$4" "$5" $outputLast $addSpacesNumberBeforeTheLogText
+    done
+}
+
+# ------------
+# Output content function: closer
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-10)
+# ------------
+outputFinish()
+{
+    outputContent "$1" "$2" "$3" "$4" "$5" true
+}
+
+# ------------
+# Do the output content switch
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-12)
+# ------------
+_doOutputContent()
+{
+    local outputClass="${1^^}"
+    local outputLocation="$2"
+    local output=""
+    local outputLast=${8:-false}
+    local addSpacesToLogTextNumber=${9:-30}
+
+    case "$outputClass" in
         JSON)
-            _outputContentJson "$1" "$2" "$3" "$4" "$5"
+            _outputContentJson output "$3" "$4" "$5" "$6" "$7"
+            if $outputLast; then
+                output+=$(outputIdent 1 "}")$'\n'
+                output+=$(outputIdent 0 "}")$'\n'
+            fi
             ;;
 
         LOG)
-            _outputContentLog "$1" "$2" "$3" "$4" "$5"
+            _outputContentLog output "$3" "$4" "$5" "$6" "$7" false $addSpacesToLogTextNumber
             ;;
 
         *)
-            echo "Unknown given type \"${outputType^^}\"."
+            echo "Unknown given type \"$outputClass\"."
+            return 1
             ;;
     esac
+
+    if [ "$output" != "" ]; then
+        if [ "$outputLocation" == "stdout" ]; then
+            echo -en "$output"
+        else
+            # create file if it does not exist
+            if [ ! -f "$outputLocation" ]; then
+                touch "$outputLocation"
+            fi
+
+            # remove colors
+            if [ "$outputClass" != "JSON" ]; then
+                output=$(echo -e "$output" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g')
+            fi
+
+            # compress json
+            if [ "$outputClass" == "JSON" ]; then
+                output=$(echo -n "$output" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g' | sed 's/:[ ]\+"/:"/g')
+            fi
+
+            echo -en "$output" >> "$outputLocation"
+        fi
+    fi
+    return 0
 }
 
 # ------------
@@ -78,18 +217,21 @@ outputContent()
 # ------------
 _outputContentLog()
 {
-    local      namespacePath="$1"
-    local             status="${2^^}"
-    local            logText="$3"
-    local              debug=${4:-false}
-    local              ident=${5:-4}
-    local            showLog=${6:-false}
-    local               date=`date "+%Y-%m-%d %H:%M:%S"`
-    local      numberOfLines=$(echo -e "$logText" | wc -l)
-    local multilineSignFirst='┏━  '
-    local      multilineSign='┃   '
-    local  multilineSignLast='┗━  '
-    local             spacer=''
+    local               _resultvar="$1"
+    local            namespacePath="$2"
+    local                   status="${3^^}"
+    local                  logText="$4"
+    local                    debug=${5:-false}
+    local                    ident=${6:-4}
+    local                  showLog=${7:-false}
+    local addSpacesToLogTextNumber=${8:-0}
+    local                     date=`date "+%Y-%m-%d %H:%M:%S"`
+    local            numberOfLines=$(echo -e "$logText" | wc -l)
+    local       multilineSignFirst='┏━  '
+    local            multilineSign='┃   '
+    local        multilineSignLast='┗━  '
+    local                   spacer=''
+    local              returnValue=''
 
     if [ "$status" == "" ]; then
         return 0
@@ -138,14 +280,27 @@ _outputContentLog()
             ;;
     esac
 
+    if [ $addSpacesToLogTextNumber -gt 0 ]; then
+        local addSpacesLogTextNumber=$(($addSpacesToLogTextNumber - 2 - ${#namespacePath}))
+        local addSpacesLogText=$(printf ' %.0s' $(seq 1 $addSpacesLogTextNumber))
+    else
+        local addSpacesLogTextNumber=0
+        local addSpacesLogText=""
+    fi
+
     # check multiline && replace line breaks
     if [ "$numberOfLines" -gt 1 ]; then
+        local addSpacesNumber=$((35 + ${#namespacePath} + $addSpacesLogTextNumber))
+        local       addSpaces=$(printf ' %.0s' $(seq 1 $addSpacesNumber))
+
         logText="$multilineSignFirst$logText"
-        logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n                                $multilineSign/g")
+        logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n$addSpaces$multilineSign/g")
         logText=$(echo -en "$logText" | sed '$s/┃ /┗━/g')
     fi
 
-    echo -e "[$date] [$status]$spacer $logText"
+    returnValue+=$(echo -e "[$date] [$status]$spacer [$namespacePath] $addSpacesLogText$logText")$'\n'
+
+    eval $_resultvar="'$returnValue'"
 }
 
 # ------------
@@ -156,11 +311,15 @@ _outputContentLog()
 # ------------
 _outputContentJson()
 {
-    local namespacePath="root.$1"
-    local status="$2"
-    local description="$3"
-    local debug=${4:-false}
-    local ident=${5:-4}
+    local         _resultvar="$1"
+    local      namespacePath="root.$2"
+    local             status="$3"
+    local        description=$(echo -e "$4" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/\\n/\\\\n/g' | sed 's/"/\\"/g')
+    local              debug=${5:-false}
+    local              ident=${6:-4}
+    local          timestamp=$(date +"%s")
+    local       timeFormated=$(date -d @$timestamp)
+    local        returnValue=''
 
     IFS='.' read -r -a namespaceArray        <<< "$namespacePath"
     IFS='.' read -r -a currentNamespaceArray <<< "$currentNamespacePath"
@@ -236,23 +395,23 @@ _outputContentJson()
         printf "5) todo open:   %-40s %4s %s\n" "\"$openNamespacePath\""  "(${#openNamespaceArray[@]})"  "($openFromNumber -> $openToNumber | $openString)"
     fi
 
-    
-
     # print close tags
     if [ $closeFromNumber -gt $closeToNumber ]; then
         for ((i=$((closeFromNumber - 1)); i>$((closeToNumber - 1)); i--)); do
             if [ $lastOpenNr -gt 0 ]; then
-                echo
+                returnValue+=$'\n'
             fi
 
-            outputIdent $((2 * i + 0)) "}" false
+            returnValue+=$(outputIdent $((2 * i + 0)) "}" false)
 
             if [ $i -eq $closeToNumber ]; then
                 if [ $i -ne $openFromNumber ] && [ $openToNumber -gt $openFromNumber ]; then
-                    echo && outputIdent $((2 * i - 1)) "}" false
+                    returnValue+=$'\n'
+                    returnValue+=$(outputIdent $((2 * i - 1)) "}" false)
                 fi
             else
-                echo && outputIdent $((2 * i - 1)) "}" false
+                returnValue+=$'\n'
+                returnValue+=$(outputIdent $((2 * i - 1)) "}" false)
             fi
         done
     fi
@@ -260,45 +419,69 @@ _outputContentJson()
     # print open tags 
     if [ $openToNumber -gt $openFromNumber ]; then
         for ((i=$openFromNumber; i<=$((openToNumber - 1)); i++)); do
+            local namespaceTranslated=$(echo "${namespaceArray[i]}" | sed -r 's/___/\./g')
+
             if [ $i -gt 0 ]; then
                 if [ $closeToNumber -eq $openFromNumber ] && [ $closeFromNumber -gt $closeToNumber ] && [ $i -eq $openFromNumber ]; then
-                    echo ","
-                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                    returnValue+=','$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceTranslated}\": {")$'\n'
                 else
-                    echo ","
-                    outputIdent $((2 * i - 1)) "data: {"
-                    outputIdent $((2 * i + 0)) "${namespaceArray[i]}: {"
+                    returnValue+=','$'\n'
+                    returnValue+=$(outputIdent $((2 * i - 1)) "\"data\": {")$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 0)) "\"${namespaceTranslated}\": {")$'\n'
                 fi
             else
-                outputIdent $((2 * i + 0)) "{"
+                returnValue+=$(outputIdent $((2 * i + 0)) "{")$'\n'
             fi
 
             local namepath=""
+            local namepathShort=""
             for ((j=0; j<${#namespaceArray[@]}; j++)); do
                 [ $j -gt $i ] && continue
                 [ "$namepath" != "" ] && namepath+="."
                 namepath+="${namespaceArray[$j]}"
+                if [ "${namespaceArray[$j]}" != "root" ]; then
+                    [ "$namepathShort" != "" ] && namepathShort+="."
+                    namepathShort+="${namespaceArray[$j]}"
+                fi
             done
 
-            outputIdent $((2 * i + 1)) "path: \"$namepath\"" false
+            returnValue+=$(outputIdent $((2 * i + 1)) "\"path\": \"$namepath\"" false)
+
+            if [ "$namepathShort" != "" ]; then
+                returnValue+=','$'\n'
+                returnValue+=$(outputIdent $((2 * i + 1)) "\"pathShort\": \"$namepathShort\"" false)
+            fi
 
             # if last opened area: print status and description if given
             if [ $i -eq $((openToNumber - 1)) ]; then
-                [ "$status" != "" ] && \
-                [ "$status" != "caption" ] && \
-                echo "," && \
-                outputIdent $((2 * i + 1)) "status: \"$status\"" false
+                if [ "$status" != "" ] && [ "$status" != "caption" ]; then
+                    returnValue+=','$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 1)) "\"status\": \"$status\"" false)
+                fi
 
-                [ "$description" != "" ] && \
-                echo "," && \
-                outputIdent $((2 * i + 1)) "description: \"$description\"" false
+                if [ "$description" != "" ]; then
+                    returnValue+=','$'\n'
+                    returnValue+=$(outputIdent $((2 * i + 1)) "\"description\": \"$description\"" false)
+                fi
+            fi
+
+            if [ $i -lt 1 ]; then
+                returnValue+=','$'\n'
+                returnValue+=$(outputIdent $((2 * i + 1)) "\"timestamp\": \"$timestamp\"" false)
+
+                returnValue+=','$'\n'
+                returnValue+=$(outputIdent $((2 * i + 1)) "\"timeFormated\": \"$timeFormated\"" false)
+
+                returnValue+=','$'\n'
+                returnValue+=$(outputIdent $((2 * i + 1)) "\"creator\": \"$BASH_LIB_NAME $BASH_LIB_VERSION\"" false)
             fi
 
             lastOpenNr=$i
         done
     else
         if [ $closeFromNumber -gt $closeToNumber ]; then
-            echo ""
+            returnValue+=$'\n'
         fi
     fi
 
@@ -307,19 +490,8 @@ _outputContentJson()
     if $debug; then
         echo
     fi
-}
 
-# ------------
-# Output content function: closer
-#
-# @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0 (2017-04-10)
-# ------------
-outputFinish()
-{
-    outputContent "" "" ""
-    outputIdent 1 "}"
-    outputIdent 0 "}"
+    eval $_resultvar="'$returnValue'"
 }
 
 # ------------
@@ -336,18 +508,14 @@ outputIdent()
     local identChar=${4:- }
     local ident=4
 
-    case $outputType in
-        json)
-            if [ $identNr -gt 0 ]; then
-                printf "%-$((identNr * $ident))s" "$identChar"
-            fi
+    if [ $identNr -gt 0 ]; then
+        printf "%-$((identNr * $ident))s" "$identChar"
+    fi
 
-            if $linebreak; then
-                echo "$text"
-            else
-                echo -n "$text"
-            fi
-            ;;
-    esac
+    if $linebreak; then
+        echo "$text"
+    else
+        echo -n "$text"
+    fi
 }
 
