@@ -3,7 +3,7 @@
 # ------
 # Example:
 #
-# 1) ./test -t log:stdout -t "log:>>/var/www/de/ixno/dashboard/log/test.log" -t "json:>/var/www/de/ixno/dashboard/json/test.json"
+# 1) ./test -t log:stdout -t "log:>>/var/www/de/ixno/dashboard/html/log/test.log" -t "json:>/var/www/de/ixno/dashboard/html/json/test.json"
 # 2) ./test --show-json
 # 3) ./test --show-log
 # ------
@@ -12,6 +12,9 @@
 filename=$(readlink ${BASH_SOURCE[0]})
 root=$(dirname "$filename")
 source "$root/../../lib/all"
+
+# reset output
+resetOutputVars
 
 # declare parameter list array
 PARAMETERS=()
