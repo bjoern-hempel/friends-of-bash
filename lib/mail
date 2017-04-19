@@ -59,25 +59,27 @@ sendErrorMailsTimeFiltered()
         if $errorMail; then
             # the last email was send not so long ago
             if [ "$(($currentErrorTimestamp - $lastErrorTimestamp))" -lt "$timeDistance" ]; then
-echo "ignore error mail to $recipient"
+                outputContentLog "info" "Ignore sending fail mail to $recipient (time out) (identifier: $namespace)."
                 continue;
             fi
 
             # send email
             echo -ne "$text" | mail -s "FAILED: $subject" -a "From: $from" "$recipient"
-echo "send failed mail to $recipient"
+            outputContentLog "info" "Send fail mail to $recipient (identifier: $namespace)."
+
             # set sent error time
             setCachedValue "$iniFile" "$fullNamespace" $currentErrorTimestamp
         else
             # no error mail was send before → no need to send this success mail
             if [ $lastErrorTimestamp -eq 0 ]; then
-echo "ignore success mail to $recipient ($fullNamespace)"
+                outputContentLog "info" "Ignore sending success mail to $recipient (no error mail before) (identifier: $namespace)."
                 continue;
             fi
 
             # send email
             echo -ne "$text" | mail -s "SUCCESS: $subject" -a "From: $from" "$recipient"
-echo "send success mail to $recipient ($fullNamespace)"
+            outputContentLog "info" "Send success mail to $recipient (identifier: $namespace)"
+
             # reset sent error time
             setCachedValue "$iniFile" "$fullNamespace" 0
         fi

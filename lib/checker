@@ -73,6 +73,9 @@ isHttpStatusCodeCheck()
         portString="\n(one of the expected ports: $portString)"
     fi
 
+    # status case name
+    local statusCaseName="case"
+
     # check status code and comparator
     for statusCodeComparator in "${statusCodeArray[@]}"; do
         ((statusCodeCounter++))
@@ -106,25 +109,25 @@ isHttpStatusCodeCheck()
                     local text="$text\nThe url \"$urlFormatted\" does not return the given compare string \"$comparatorFormatted\""
                     [ ${#comparison} -gt 10 ] && text="$text\n" || text="$text "
                     text="$text(returns \"$comparisonFormated\")."
-                    outputContent "statusCodes.$statusCodeCounter" "failed" "$text"
+                    outputContent "statusCodes.${statusCaseName}${statusCodeCounter}" "failed" "$text"
                     return 1
                 else
                     local text="$text\nThe url \"$urlFormatted\" returns the given compare string:"
                     [ ${#comparator} -gt 10 ] && text="$text\n" || text="$text "
                     text="$text\"$comparatorFormatted\"."
-                    outputContent "statusCodes.$statusCodeCounter" "passed" "$text"
+                    outputContent "statusCodes.${statusCaseName}${statusCodeCounter}" "passed" "$text"
                     return 0
                 fi
             fi
 
             local text="The url \"$urlFormatted\" returns the expected status code \"$statusCodeFormatted\"$portString."
-            outputContent "statusCodes.$statusCodeCounter" "passed" "$text"
+            outputContent "statusCodes.${statusCaseName}${statusCodeCounter}" "passed" "$text"
             return 0
         fi
     done
 
     local text="The url \"$urlFormatted\" does not return the expected status code \"$expectedStatusCodes\" (returns \"$returnedStatusCode\")$portString."
-    outputContent "statusCodes.$statusCodeCounter" "failed" "$text"
+    outputContent "statusCodes.${statusCaseName}${statusCodeCounter}" "failed" "$text"
     return 1
 }
 

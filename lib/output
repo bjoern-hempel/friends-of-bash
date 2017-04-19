@@ -213,6 +213,24 @@ _doOutputContent()
 # Output content function: log
 #
 # @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-04-19)
+# ------------
+outputContentLog()
+{
+    local     logString=""
+    local        status="${1^^}"
+    local       logText="$2"
+    local         ident=${3:-4}
+
+    _outputContentLog "logString" "" "$status" "$logText" false "$ident" false "$addSpacesNumberBeforeTheLogText"
+
+    echo -en "$logString"
+}
+
+# ------------
+# Output content function: log
+#
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-04-10)
 # ------------
 _outputContentLog()
@@ -280,25 +298,36 @@ _outputContentLog()
             ;;
     esac
 
-    if [ $addSpacesToLogTextNumber -gt 0 ]; then
-        local addSpacesLogTextNumber=$(($addSpacesToLogTextNumber - 2 - ${#namespacePath}))
-        local addSpacesLogText=$(printf ' %.0s' $(seq 1 $addSpacesLogTextNumber))
-    else
-        local addSpacesLogTextNumber=0
-        local addSpacesLogText=""
+    local addSpacesNumber=35
+
+    if [ "$namespacePath" != "" ]; then
+        if [ $addSpacesToLogTextNumber -gt 0 ]; then
+            local addSpacesLogTextNumber=$(($addSpacesToLogTextNumber - 2 - ${#namespacePath}))
+            local addSpacesLogText=$(printf ' %.0s' $(seq 1 $addSpacesLogTextNumber))
+        else
+            local addSpacesLogTextNumber=0
+            local addSpacesLogText=""
+        fi
+
+        # check multiline && replace line breaks
+        local addSpacesNumber=$((addSpacesNumber + ${#namespacePath} + $addSpacesLogTextNumber))
     fi
 
     # check multiline && replace line breaks
     if [ "$numberOfLines" -gt 1 ]; then
-        local addSpacesNumber=$((35 + ${#namespacePath} + $addSpacesLogTextNumber))
-        local       addSpaces=$(printf ' %.0s' $(seq 1 $addSpacesNumber))
+        local addSpaces=$(printf ' %.0s' $(seq 1 $addSpacesNumber))
 
         logText="$multilineSignFirst$logText"
         logText=$(echo -en "$logText" | sed ":a;N;\$!ba;s/\\n/\\n$addSpaces$multilineSign/g")
         logText=$(echo -en "$logText" | sed '$s/┃ /┗━/g')
     fi
 
-    returnValue+=$(echo -e "[$date] [$status]$spacer [$namespacePath] $addSpacesLogText$logText")$'\n'
+    # build the returned value
+    if [ "$namespacePath" != "" ]; then
+        returnValue+=$(echo -e "[$date] [$status]$spacer [$namespacePath] $addSpacesLogText$logText")$'\n'
+    else
+        returnValue+=$(echo -e "[$date] [$status]$spacer $logText")$'\n'
+    fi
 
     eval $_resultvar="'$returnValue'"
 }
