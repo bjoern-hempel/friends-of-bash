@@ -239,7 +239,7 @@ _outputContentLog()
     local               _resultvar="$1"
     local            namespacePath=$(getDottedString "$2")
     local                   status="${3^^}"
-    local                  logText="$4"
+    local                  logText="$4" #"${4//\'/---}"
     local                    debug=${5:-false}
     local                    ident=${6:-4}
     local              suppressLog=${7:-false}
@@ -300,9 +300,14 @@ _outputContentLog()
             ;;
     esac
 
-    local addSpacesNumber=33
+    local addSpacesNumber=34
 
     if [ "$namespacePath" != "" ]; then
+
+        if [ ${#namespacePath} -gt $((addSpacesToLogTextNumber - 3)) ]; then
+            namespacePath="${namespacePath:0:$((addSpacesToLogTextNumber - 5))}.."
+        fi
+
         if [ $addSpacesToLogTextNumber -gt 0 ]; then
             local addSpacesLogTextNumber=$(($addSpacesToLogTextNumber - 2 - ${#namespacePath}))
             local addSpacesLogText=$(printf ' %.0s' $(seq 1 $addSpacesLogTextNumber))
@@ -326,12 +331,12 @@ _outputContentLog()
 
     # build the returned value
     if [ "$namespacePath" != "" ]; then
-        returnValue+=$(echo -e "[$date] [$status]$spacer[$namespacePath]$addSpacesLogText$logText")$'\n'
+        returnValue+=$(echo -e "[$date] [$status] $spacer[$namespacePath]$addSpacesLogText$logText")$'\n'
     else
-        returnValue+=$(echo -e "[$date] [$status]$spacer$logText")$'\n'
+        returnValue+=$(echo -e "[$date] [$status] $spacer$logText")$'\n'
     fi
 
-    eval $_resultvar="'$returnValue'"
+    eval $_resultvar='"$returnValue"'
 }
 
 # ------------
