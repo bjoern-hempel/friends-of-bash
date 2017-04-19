@@ -109,35 +109,38 @@ getCachedValue()
 # ------------
 setCachedValue()
 {
-  local file="$1"
-  local namespace="$2"
-  local value="$3"
-  # create folder
-  [ ! -d "$(dirname $file)" ] && mkdir -p "$(dirname $file)"
+    local file="$1"
+    local namespace="$2"
+    local value="$3"
 
-  # touch file
-  [ ! -f "$file" ] && touch "$file"
+    # create folder
+    [ ! -d "$(dirname $file)" ] && mkdir -p "$(dirname $file)"
 
-  local counter=0
-  while read line; do
-    ((counter++))
+    # touch file
+    [ ! -f "$file" ] && touch "$file"
 
-    IFS=' ' read -r -a array <<< "$line"
+    local counter=0
+    while read line; do
+        ((counter++))
 
-    if [ "$namespace" == "${array[0]}" ]; then
-      removeLineFromFile "$file" $counter
+        IFS=' ' read -r -a array <<< "$line"
+
+        if [ "$namespace" == "${array[0]}" ]; then
+            removeLineFromFile "$file" $counter
+        fi
+    done < "$file"
+
+    if [ "$value" != "" ]; then
+        filesize=$(stat --printf="%s" "$file")
+
+        if [ "$filesize" -gt 0 ]; then
+            echo "$namespace $value" >> "$file"
+        else
+            echo "$namespace $value" > "$file"
+        fi
     fi
-  done < "$file"
 
-  filesize=$(stat --printf="%s" "$file")
-
-  if [ "$filesize" -gt 0 ]; then
-    echo "$namespace $value" >> "$file"
-  else
-    echo "$namespace $value" > "$file"
-  fi
-
-  return 0
+    return 0
 }
 
 # ------------
@@ -150,12 +153,15 @@ removeLineFromFile()
 {
   local file="$1"
   local line="$2"
+
   if [ ! -f "$file" ]; then
     touch "$file"
     return 0
   fi
+
   result=$(sed $line' d' "$file")
   echo -e "$result" > "$file.tmp"
+
   # remove empty lines
   grep -v '^$' "$file.tmp" > "$file"
   rm "$file.tmp"

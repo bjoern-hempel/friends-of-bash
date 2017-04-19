@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 # ------------
 # Send an email.
 # You can use it inside a loop. It sends only a mail,
@@ -33,61 +31,56 @@ sendMailTimeFiltered ()
   return 0
 }
 
-
-
-
 # ------------
-# Send an email.
-# You can use it inside a loop. It sends only a mail,
-# if the last mail is more than $timeDistance away.
+# Send error mails to given recipients. The first success mail will also be send.
 #
 # @author  Björn Hempel
-# @version 1.0 (2017-04-18)
+# @version 1.0 (2017-04-19)
 # ------------
-sendMailTimeFiltered2 ()
-{
-    local      subject="$1"
-    local         text="$2"
-    local    recipient="$3"
-    local         from="$4"
-    local     timeFile="$5"
-    local timeDistance=${6:-300}
-
-    # remove the log date of the given text (because this is changed every time and the sh1sum calculation doesn't work
-    namespace="$recipient/"$(echo -ne "$text" | sed 's/\[[0-9]\{4,4\}-[0-9]\{2,2\}-[0-9]\{2,2\} [0-9]\{2,2\}:[0-9]\{2,2\}:[0-9]\{2,2\}\] //g' | sha1sum | sed 's/ .*//')
-
-       lastTimestamp=$(getLastTimeFromFile "$timeFile" "$namespace")
-    currentTimestamp=$(getCurrentTimestamp)
-
-    # the last email is not so long ago - stop here
-    if [ "$(($currentTimestamp - $lastTimestamp))" -lt "$timeDistance" ]; then
-        return 1
-    fi
-
-    # send email
-    echo -ne "$text" | mail -s "$subject" -a "From: $from" "$recipient"
-
-    # write new status
-    setCurrentTimeToFile "$timeFile" "$namespace"
-
-    # return success status
-    return 0
-}
-
-
-sendMails()
+sendErrorMailsTimeFiltered()
 {
     local      subject="$1"
     local         text="$2"
     local   recipients="$3"
     local         from="$4"
-    local     timeFile="$5"
-    local timeDistance=${6:-300}
+    local      iniFile="$5"
+    local    namespace="$6"
+    local    errorMail=${7:-false}
+    local timeDistance=${8:-300}
 
     IFS=',' read -r -a recipientArray <<< "$recipients"
 
     for recipient in "${recipientArray[@]}"; do
-        sendMailTimeFiltered2 "$subject" "$text" "$recipient" "$from" "$timeFile" $timeDistance
+        local fullNamespace="${namespace}.error:${recipient}"
+
+        local    lastErrorTimestamp=$(getCachedValue "$iniFile" "$fullNamespace" 0)
+        local currentErrorTimestamp=$(getCurrentTimestamp)
+
+        if $errorMail; then
+            # the last email was send not so long ago
+            if [ "$(($currentErrorTimestamp - $lastErrorTimestamp))" -lt "$timeDistance" ]; then
+echo "ignore error mail to $recipient"
+                continue;
+            fi
+
+            # send email
+            echo -ne "$text" | mail -s "FAILED: $subject" -a "From: $from" "$recipient"
+echo "send failed mail to $recipient"
+            # set sent error time
+            setCachedValue "$iniFile" "$fullNamespace" $currentErrorTimestamp
+        else
+            # no error mail was send before → no need to send this success mail
+            if [ $lastErrorTimestamp -eq 0 ]; then
+echo "ignore success mail to $recipient ($fullNamespace)"
+                continue;
+            fi
+
+            # send email
+            echo -ne "$text" | mail -s "SUCCESS: $subject" -a "From: $from" "$recipient"
+echo "send success mail to $recipient ($fullNamespace)"
+            # reset sent error time
+            setCachedValue "$iniFile" "$fullNamespace" 0
+        fi
     done
 }
 
