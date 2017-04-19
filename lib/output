@@ -217,12 +217,13 @@ _doOutputContent()
 # ------------
 outputContentLog()
 {
-    local     logString=""
-    local        status="${1^^}"
-    local       logText="$2"
-    local         ident=${3:-4}
+    local      logString=""
+    local         status="${1^^}"
+    local        logText="$2"
+    local suppressOutput=${3:-false}
+    local          ident=${4:-4}
 
-    _outputContentLog "logString" "" "$status" "$logText" false "$ident" $suppressDirectOutput "$addSpacesNumberBeforeTheLogText"
+    _outputContentLog "logString" "" "$status" "$logText" false "$ident" $suppressOutput "$addSpacesNumberBeforeTheLogText"
 
     echo -en "$logString"
 }
