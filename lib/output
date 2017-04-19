@@ -222,7 +222,7 @@ outputContentLog()
     local       logText="$2"
     local         ident=${3:-4}
 
-    _outputContentLog "logString" "" "$status" "$logText" false "$ident" false "$addSpacesNumberBeforeTheLogText"
+    _outputContentLog "logString" "" "$status" "$logText" false "$ident" $suppressDirectOutput "$addSpacesNumberBeforeTheLogText"
 
     echo -en "$logString"
 }
@@ -241,7 +241,7 @@ _outputContentLog()
     local                  logText="$4"
     local                    debug=${5:-false}
     local                    ident=${6:-4}
-    local                  showLog=${7:-false}
+    local              suppressLog=${7:-false}
     local addSpacesToLogTextNumber=${8:-0}
     local                     date=`date "+%Y-%m-%d %H:%M:%S"`
     local            numberOfLines=$(echo -e "$logText" | wc -l)
@@ -251,12 +251,13 @@ _outputContentLog()
     local                   spacer=''
     local              returnValue=''
 
+    # no status given
     if [ "$status" == "" ]; then
         return 0
     fi
 
     # disabled output
-    if $showLog; then
+    if $suppressLog; then
         return 0
     fi
 
@@ -298,7 +299,7 @@ _outputContentLog()
             ;;
     esac
 
-    local addSpacesNumber=35
+    local addSpacesNumber=33
 
     if [ "$namespacePath" != "" ]; then
         if [ $addSpacesToLogTextNumber -gt 0 ]; then
@@ -324,9 +325,9 @@ _outputContentLog()
 
     # build the returned value
     if [ "$namespacePath" != "" ]; then
-        returnValue+=$(echo -e "[$date] [$status]$spacer [$namespacePath] $addSpacesLogText$logText")$'\n'
+        returnValue+=$(echo -e "[$date] [$status]$spacer[$namespacePath]$addSpacesLogText$logText")$'\n'
     else
-        returnValue+=$(echo -e "[$date] [$status]$spacer $logText")$'\n'
+        returnValue+=$(echo -e "[$date] [$status]$spacer$logText")$'\n'
     fi
 
     eval $_resultvar="'$returnValue'"

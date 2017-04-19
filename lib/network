@@ -107,7 +107,9 @@ isPortOpen()
     ip="$1"
     port="$2"
 
-    if (echo >/dev/tcp/$ip/$port) &>/dev/null; then
+    timeout 2 bash -c "cat < /dev/null > /dev/tcp/$ip/$port"
+
+    if [ $? -eq 0 ]; then
         return 0
     else
         return 1
