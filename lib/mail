@@ -39,17 +39,40 @@ sendMailTimeFiltered ()
 # ------------
 sendErrorMailsTimeFiltered()
 {
-    local        subject="$1"
-    local           text="$2"
-    local     recipients="$3"
-    local           from="$4"
-    local        iniFile="$5"
-    local      namespace="$6"
-    local      errorMail=${7:-false}
-    local   timeDistance=${8:-300}
-    local suppressOutput=${9:false}
+    local emailRelayStrategy="$1"
+    local            subject="$2"
+    local               text="$3"
+    local         recipients="$4"
+    local               from="$5"
+    local            iniFile="$6"
+    local          namespace="$7"
+    local          errorMail=${8:-false}
+    local       timeDistance=${9:-300}
+    local     suppressOutput=${10:false}
 
     IFS=',' read -r -a recipientArray <<< "$recipients"
+
+    local relayStrategyServer="direct"
+    local relayStrategyName=""
+
+    if [ "$emailRelayStrategy" != "direct" ]; then
+        IFS=':' read -r -a emailRelayStrategyArray <<< "$emailRelayStrategy"
+
+        if [ "${emailRelayStrategyArray[0]}" == "docker" ]; then
+            relayStrategyServer="${emailRelayStrategyArray[0]}"
+            relayStrategyName="${emailRelayStrategyArray[1]}"
+
+            local statusDockerMachine=$(getDockerContainerStatus "$relayStrategyName")
+
+            if [ "$statusDockerMachine" != "running" ]; then
+                outputContentLog "info" "The docker machine is not running ($relayStrategyName)." $suppressOutput
+                return 1
+            fi
+        else
+            outputContentLog "info" "Unknown relay type \"${emailRelayStrategyArray[0]}\"." $suppressOutput
+            return 1
+        fi
+    fi
 
     for recipient in "${recipientArray[@]}"; do
         local fullNamespace="${namespace}.error:${recipient}"
@@ -65,7 +88,13 @@ sendErrorMailsTimeFiltered()
             fi
 
             # send email
-            echo -ne "$text" | mail -s "FAILED: $subject" -a "From: $from" "$recipient"
+            if [ "$relayStrategyServer" == "direct" ]; then
+                echo -ne "$text" | mail -s "FAILED: $subject" -a "From: $from" "$recipient"
+            else
+                echo -ne "$text" | docker exec -i "$relayStrategyName" mail -s "FAILED: $subject" -a "From: $from" "$recipient"
+            fi
+
+            # log output
             outputContentLog "info" "Send fail mail to $recipient (identifier: $namespace)." $suppressOutput
 
             # set sent error time
@@ -78,7 +107,13 @@ sendErrorMailsTimeFiltered()
             fi
 
             # send email
-            echo -ne "$text" | mail -s "SUCCESS: $subject" -a "From: $from" "$recipient"
+            if [ "$relayStrategyServer" == "direct" ]; then
+                echo -ne "$text" | mail -s "SUCCESS: $subject" -a "From: $from" "$recipient"
+            else
+                echo -ne "$text" | docker exec -i "$relayStrategyName" mail -s "SUCCESS: $subject" -a "From: $from" "$recipient"
+            fi
+
+            # log output
             outputContentLog "info" "Send success mail to $recipient (identifier: $namespace)" $suppressOutput
 
             # reset sent error time
