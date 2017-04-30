@@ -1,3 +1,46 @@
 #!/bin/bash
 
+# ------------
+# Installs a git repository into a given folder
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-04-30)
+# ------------
+gitInstall ()
+{
+    local                projectGitUri="$1"
+    local                  projectPath="$2"
+    local        projectInstallMessage=$(printf "$3" "$projectPath")
+    local projectInstallSuccessMessage=$(printf "$4" "$projectPath")
+    local   projectInstallErrorMessage=$(printf "$5" "$projectPath")
 
+    # check global path folder
+    if [ ! -d "$projectPath" ]; then
+        # ask the user
+        while true; do
+            read -p "$projectInstallMessage Type (y)es or (n)o: " -n 1 yn
+            echo
+            case $yn in
+                [Yy]* ) result=$(git clone "$projectGitUri" "$projectPath" 2>&1); break;;
+                [Nn]* ) exit;;
+                * ) echo "Please answer yes or no.";;
+            esac
+        done
+
+        if [ $? -ne 0 ]; then
+            log "error" "$projectInstallErrorMessage The git was executed with status $?."
+            log "info"  "$result"
+            return 1
+        fi
+
+        if [ ! -d "$projectPath" ]; then
+            log "error" "$projectInstallErrorMessage The folder \"$project\" was not found."
+            log "info"  "$result"
+            return 1
+        fi
+    fi
+
+    log "success" "$projectInstallSuccessMessage"
+
+    return 0
+}
