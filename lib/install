@@ -8,13 +8,15 @@
 # ------------
 gitInstall ()
 {
-    local                projectGitUri="$1"
+    local                projectGitZip="$1"
     local                  projectPath="$2"
-    local       projectInstallQuestion=$(printf "$3" "$projectPath")
-    local        projectInstallMessage=$(printf "$4" "$projectPath")
-    local projectInstallSuccessMessage=$(printf "$5" "$projectPath")
-    local   projectInstallErrorMessage=$(printf "$6" "$projectPath")
-    local         projectCancelMessage="$7"
+    local                  projectName="$3"
+    local                   branchName="$4"
+    local       projectInstallQuestion=$(printf "$5" "$projectPath")
+    local        projectInstallMessage=$(printf "$6" "$projectPath")
+    local projectInstallSuccessMessage=$(printf "$7" "$projectPath")
+    local   projectInstallErrorMessage=$(printf "$8" "$projectPath")
+    local         projectCancelMessage="$9"
 
     # check global path folder
     if [ ! -d "$projectPath" ]; then
@@ -25,7 +27,10 @@ gitInstall ()
             case $yn in
                 [Yy]* )
                     log "info" "$projectInstallMessage"
-                    result=$(git clone "$projectGitUri" "$projectPath" 2>&1);
+                    result=$(wget -q "$projectGitZip" -O "/tmp/${projectName}.zip")
+                    result=$(unzip -qq "/tmp/${projectName}.zip" -d /tmp)
+                    result=$(mv "/tmp/${projectName}-${branchName}" "$projectPath")
+                    result=$(rm "/tmp/${projectName}.zip")
                     break
                     ;;
                 [Nn]* )
