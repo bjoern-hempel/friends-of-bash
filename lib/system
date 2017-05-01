@@ -73,6 +73,16 @@ removeApp()
 }
 
 # ------------
+# check if a given application exists
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-01)
+# ------------
+applicationExists() {
+  `which $1 >/dev/null`
+}
+
+# ------------
 # Gets the name of environment. Possible values are:
 # - prod    (production)
 # - staging (staging)
