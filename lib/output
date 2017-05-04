@@ -204,6 +204,19 @@ _doOutputContent()
             fi
 
             echo -en "$output" >> "$outputLocation"
+
+            # write index json
+            if [ "$outputClass" == "JSON" ]; then
+                if $outputLast; then
+                    local         jsonPath=$(dirname "$outputLocation")
+                    local    jsonIndexFile="index.json"
+                    local jsonIndexContent=$(getJsonIndexContent "$jsonPath" "$jsonIndexFile")
+
+                    jsonIndexContent=$(compressJson "$jsonIndexContent")
+
+                    echo -en "$jsonIndexContent" > "$jsonPath/$jsonIndexFile"
+                fi
+            fi
         fi
     fi
     return 0

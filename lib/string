@@ -123,3 +123,16 @@ getDottedString()
     echo "$1" | sed -r 's/___/\./g'
 }
 
+# ------------
+# Remove colors from given strings.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-05)
+# ------------
+getColorRemovedString()
+{
+    local string="$1"
+
+    echo -e "$string" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g'
+}
+

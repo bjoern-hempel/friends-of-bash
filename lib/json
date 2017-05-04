@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# ------------
+# Compress given json string.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-05)
+# ------------
+compressJson()
+{
+    local json="$1"
+
+    echo -n "$json" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g' | sed 's/:[ ]\+"/:"/g'
+}
+
+

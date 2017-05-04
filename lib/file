@@ -47,6 +47,41 @@ cfgParser()
 }
 
 # ------------
+# Generate json index file.
+#
+# @author  Björn Hempel
+# @version 1.0
+# ------------
+getJsonIndexContent()
+{
+    local      jsonPath="$1"
+    local jsonIndexFile="$2"
+
+    json=""
+
+    json+="{"$'\n'
+    for entry in "$jsonPath"/*.json; do
+            path=$(echo "$entry")
+            time=$(stat -c %Y "$entry")
+             md5=$(md5sum "$entry" | awk '{ print $1 }')
+        basename=$(basename "$path")
+
+        if [ "$basename" == "$jsonIndexFile" ]; then
+            continue
+        fi
+
+        json+='    {'$'\n'
+        json+='        "name":      "'$path'",'$'\n'
+        json+='        "updatedAt": "'$time'",'$'\n'
+        json+='        "md5":       "'$md5'"'$'\n'
+        json+='    }'$'\n'
+    done
+    json+="}"
+
+    echo "$json"
+}
+
+# ------------
 # Get the last timestamp from given namespace.
 #
 # @author  Björn Hempel
