@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# ------------
+# A install script to install this framework into the /opt directory.
+#
+# @author    Björn Hempel <bjoern@hempel.li>
+# @version   1.0 (2017-05-16)
+#
+# @copyright MIT License
+# @copyright
+# @copyright Copyright (c) 2017 Björn Hempel
+# @copyright
+# @copyright Permission is hereby granted, free of charge, to any person obtaining a copy
+# @copyright of this software and associated documentation files (the "Software"), to deal
+# @copyright in the Software without restriction, including without limitation the rights
+# @copyright to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# @copyright copies of the Software, and to permit persons to whom the Software is
+# @copyright furnished to do so, subject to the following conditions:
+# @copyright
+# @copyright The above copyright notice and this permission notice shall be included in all
+# @copyright copies or substantial portions of the Software.
+# @copyright
+# @copyright THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# @copyright IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# @copyright FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# @copyright AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# @copyright LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# @copyright OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# @copyright SOFTWARE.
+# @copyright
+# @copyright Written by Björn Hempel <bjoern@hempel.li>.
+# ------------
+
+# some configs before
+pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+scriptname="${BASH_SOURCE[0]}"
+
+# some constants
+ROOT_UID=0
+TARGET_FOLDER="/opt/friends-of-bash"
+
+# the global mode needs root credentials
+if [ "$UID" -ne "$ROOT_UID" ]; then
+    echo "You need root credentials to install that script into \"$TARGET_FOLDER\"."
+    exit 1
+fi
+
+user=$SUDO_USER
+group=$(id -g -n $user)
+if [ -f "$pathRoot/.git/config" ]; then
+    gitRepository=$(cat "$pathRoot/.git/config" | grep "url =" | awk '{print $3}')
+    [[ "$gitRepository" =~ ([a-zA-Z0-9._-]+)(.git$) ]] && nameRepository="${BASH_REMATCH[1]}" || nameRepository=""
+else
+    gitRepository=""
+    nameRepository=""
+fi
+
+if [ "$gitRepository" == "" ]; then
+    echo "No git repository config found → abort.."
+    exit 1
+fi
+
+if [ "$nameRepository" == "" ]; then
+    echo "Not able to extract the name of repository → abort.."
+    exit 1
+fi
+
+installFolder="$TARGET_FOLDER/$nameRepository"
+
+if [ -d "$installFolder" ]; then
+    echo "The target install folder \"$installFolder\" already exists → abort.."
+    exit 1
+fi
+
+# create install folder
+mkdir -p "$installFolder"
+chown $user:$group "$installFolder"
+sudo -u $user git clone "$gitRepository" "$installFolder"
+
+echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
