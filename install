@@ -31,13 +31,19 @@
 # @copyright Written by Björn Hempel <bjoern@hempel.li>.
 # ------------
 
-# some configs before
+# some user definable constants
+TARGET_FOLDER="/opt/friends-of-bash"
+EXECUTIVE_FOLDER="/usr/local/bin"
+
+# some user constants
+ROOT_UID=0
+
+# some user definable variables
+installableApps=(install)
+
+# some calculable configs before
 pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 scriptname="${BASH_SOURCE[0]}"
-
-# some constants
-ROOT_UID=0
-TARGET_FOLDER="/opt/friends-of-bash"
 
 # the global mode needs root credentials
 if [ "$UID" -ne "$ROOT_UID" ]; then
@@ -45,8 +51,11 @@ if [ "$UID" -ne "$ROOT_UID" ]; then
     exit 1
 fi
 
+# get the executive user
 user=$SUDO_USER
 group=$(id -g -n $user)
+
+# try to get the git repository source and the name of that repository
 if [ -f "$pathRoot/.git/config" ]; then
     gitRepository=$(cat "$pathRoot/.git/config" | grep "url =" | awk '{print $3}')
     [[ "$gitRepository" =~ ([a-zA-Z0-9._-]+)(.git$) ]] && nameRepository="${BASH_REMATCH[1]}" || nameRepository=""
@@ -55,26 +64,60 @@ else
     nameRepository=""
 fi
 
+# check git repository config
 if [ "$gitRepository" == "" ]; then
     echo "No git repository config found → abort.."
     exit 1
 fi
 
+# check git name
 if [ "$nameRepository" == "" ]; then
     echo "Not able to extract the name of repository → abort.."
     exit 1
 fi
 
+# calculate git target paths
 installFolder="$TARGET_FOLDER/$nameRepository"
 
-if [ -d "$installFolder" ]; then
-    echo "The target install folder \"$installFolder\" already exists → abort.."
-    exit 1
+# install this project to install folder
+if [ ! -d "$installFolder" ]; then
+    # create install folder
+    mkdir -p "$installFolder"
+    chown $user:$group "$installFolder"
+    sudo -u $user git clone "$gitRepository" "$installFolder"
+
+    echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
+else
+    echo "The target install folder \"$installFolder\" already exists → skip.."
 fi
 
-# create install folder
-mkdir -p "$installFolder"
-chown $user:$group "$installFolder"
-sudo -u $user git clone "$gitRepository" "$installFolder"
+# install the global scripts
+for installableApp in "${installableApps[@]}"; do
+    sourceScript="$installFolder/$installableApp"
+    targetScript="$EXECUTIVE_FOLDER/$nameRepository-$installableApp"
 
-echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
+    # delete true file
+    if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
+        rm "$targetScript"
+    fi
+
+    # delete symlink with wrong target
+    if [ -L "$targetScript" ]; then
+        targetSymlinkPath=$(readlink -f "$targetScript")
+
+        if [ "$targetSymlinkPath" != "$sourceScript" ]; then
+            echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
+            rm "$sourceScript"
+        fi
+    fi
+
+    # add symlink if the link doesn't exist
+    if [ ! -L "$targetScript" ]; then
+        echo "create symlink \"$targetScript\"."
+       ln -s "$sourceScript" "$targetScript"
+    else
+        echo "$targetScript already exists → skip.."
+    fi
+done
+
+
