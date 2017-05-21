@@ -70,9 +70,15 @@ getLastTagByGivenRepository ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getCurrentTagFromLocal ()
+getCurrentTagFromGivenPath ()
 {
-    echo $(git describe | xargs)
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    git -C "$gitDir" describe | xargs
 }
 
 # ------------
@@ -92,8 +98,14 @@ getLastChangesetFromGivenRepository ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getCurrentChangesetFromLocal ()
+getCurrentChangesetFromGivenPath ()
 {
-    git rev-parse HEAD | xargs
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    git -C "$gitDir" rev-parse HEAD | xargs
 }
 

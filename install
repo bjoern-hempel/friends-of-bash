@@ -44,9 +44,11 @@ installableApps[install]=""
 
 # some calculable configs before
 if [ -h "${BASH_SOURCE[0]}" ]; then
-    filename=$(readlink "${BASH_SOURCE[0]}")
-    pathRoot=$(dirname "$filename")
+    realScriptname=$(readlink "${BASH_SOURCE[0]}")
+    pathRoot=$(dirname "$realScriptname")
+    scriptname="${BASH_SOURCE[0]}"
 else
+    scriptname="$0"
     pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
@@ -78,13 +80,14 @@ source "$pathRoot/lib/all"
 # ------------
 # install method
 #
-# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
 install ()
 {
-    local gitRepository="$1"
-    local nameRepository="$2"
+    local pathRoot="$1"
+    local gitRepository="$2"
+    local nameRepository="$3"
 
     # the global mode needs root credentials
     if [ "$UID" -ne "$ROOT_UID" ]; then
@@ -149,20 +152,75 @@ install ()
 }
 
 # ------------
+# update method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+update ()
+{
+    local pathRoot="$1"
+    local gitRepository="$2"
+    local nameRepository="$3"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
+
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
+
+    # no update is available
+    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+        echo "Your friends of bash version is up to date. Nothing to do here."
+        return 0
+    fi
+
+    while true; do
+        read -n 1 -p "Do you really want to update the current version \"$localVersion\" to \"$remoteVersion\"? Type (y)es or (no): " yn
+        case $yn in
+            # yes
+            [Yy]*)
+                break
+                ;;
+            # no
+            [Nn]*)
+                echo
+                echo "The update was cancelled by user."
+                exit
+                ;;
+            # escape
+            $'\e')
+                echo
+                echo "The update was cancelled by user."
+                exit
+                ;;
+            # other character
+            *)
+                echo
+                ;;
+        esac
+    done
+
+    echo
+    git -C "$pathRoot" pull
+}
+
+# ------------
 # status method
 #
-# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
 status ()
 {
-    local gitRepository="$1"
-    local nameRepository="$2"
+    local pathRoot="$1"
+    local gitRepository="$2"
+    local nameRepository="$3"
 
-    local localHash=$(getCurrentChangesetFromLocal)
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
     local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
 
-    local localVersion=$(getCurrentTagFromLocal)
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
     local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
 
     echo
@@ -185,52 +243,40 @@ status ()
     fi
 }
 
+# ------------
+# Shows the version number of this library.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+showVersion ()
+{
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+
+    echo "$nameRepository/$localVersion ($localHash)"
+}
+
 # check the current target path
 executionPathIsTarget=false
 if [[ "$pathRoot" =~ "$TARGET_FOLDER" ]]; then
     executionPathIsTarget=true
 fi
 
-# initial values
-EXECUTION_TYPE="install"
-
-# declare parameter list array
-PARAMETERS=()
-
-# read arguments
-while [[ $# > 0 ]]; do
-    case "$1" in
-        # status mode
-        --status)
-            EXECUTION_TYPE="status"
-            ;;
-
-        # install mode
-        --install)
-            EXECUTION_TYPE="install"
-            ;;
-
-        # update mode
-        --update)
-            EXECUTION_TYPE="update"
-            ;;
-
-        # collect these unknown parameters
-        *)
-            PARAMETERS+=("$1")
-            ;;
-    esac
-    shift
-done
+source "$pathRoot/parameter"
 
 # execute function according the execution type
-case $EXECUTION_TYPE in
+case $executionType in
     install)
-        install "$gitRepository" "$nameRepository"
+        install "$pathRoot" "$gitRepository" "$nameRepository"
         ;;
 
     status)
-        status "$gitRepository" "$nameRepository"
+        status "$pathRoot" "$gitRepository" "$nameRepository"
+        ;;
+
+    update)
+        update "$pathRoot" "$gitRepository" "$nameRepository"
         ;;
 
     # other character
