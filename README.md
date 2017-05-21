@@ -52,3 +52,32 @@ user$ /usr/local/bin/friends-of-bash update
 $ friends-of-bash update
 ```
 
+## 2.) Usage
+
+TODO: Describe the usage of this library here.
+
+## 3.) Libraries
+
+1. array
+2. cert
+3. checker
+4. color
+5. date
+6. device
+7. docker
+8. docker-container
+9. docker-image
+10. domain
+11. file
+12. filesystem
+13. general
+14. git
+15. install
+16. json
+17. mail
+18. network
+19. output
+20. screen
+21. string
+22. system
+23. version
