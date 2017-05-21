@@ -58,7 +58,7 @@ TODO: Describe the usage of this library here.
 
 ## 3.) Libraries
 
-1. array
+1. [array](docs/README-ARRAY.md)
 2. cert
 3. checker
 4. color
