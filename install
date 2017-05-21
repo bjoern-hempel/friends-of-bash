@@ -238,7 +238,7 @@ status ()
         echo
     else
         echo "Your friends of bash library version is not up to date. Please update with:"
-        echo "user\$ $0 --update"
+        echo "user\$ $0 update"
         echo
     fi
 }
@@ -263,7 +263,13 @@ if [[ "$pathRoot" =~ "$TARGET_FOLDER" ]]; then
     executionPathIsTarget=true
 fi
 
-source "$pathRoot/parameter"
+# set unknown execution type
+if $executionPathIsTarget; then
+    executionType="getItFromCommandLineArgument"
+fi
+
+# include arguments
+source "$pathRoot/arguments"
 
 # execute function according the execution type
 case $executionType in

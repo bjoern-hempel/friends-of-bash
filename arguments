@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # initial values
-executionType="install"
+if [ -z $executionType ]; then
+    executionType="install"
+fi
 
 # declare parameter list array
 PARAMETERS=()
