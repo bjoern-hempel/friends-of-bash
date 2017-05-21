@@ -39,21 +39,16 @@ EXECUTIVE_FOLDER="/usr/local/bin"
 ROOT_UID=0
 
 # some user definable variables
-installableApps=(install)
+declare -A installableApps
+installableApps[install]=""
 
 # some calculable configs before
-pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-scriptname="${BASH_SOURCE[0]}"
-
-# the global mode needs root credentials
-if [ "$UID" -ne "$ROOT_UID" ]; then
-    echo "You need root credentials to install that script into \"$TARGET_FOLDER\"."
-    exit 1
+if [ -h "${BASH_SOURCE[0]}" ]; then
+    filename=$(readlink "${BASH_SOURCE[0]}")
+    pathRoot=$(dirname "$filename")
+else
+    pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
-
-# get the executive user
-user=$SUDO_USER
-group=$(id -g -n $user)
 
 # try to get the git repository source and the name of that repository
 if [ -f "$pathRoot/.git/config" ]; then
@@ -76,48 +71,118 @@ if [ "$nameRepository" == "" ]; then
     exit 1
 fi
 
-# calculate git target paths
-installFolder="$TARGET_FOLDER/$nameRepository"
+# install function
+install ()
+{
+    local gitRepository="$1"
+    local nameRepository="$2"
 
-# install this project to install folder
-if [ ! -d "$installFolder" ]; then
-    # create install folder
-    mkdir -p "$installFolder"
-    chown $user:$group "$installFolder"
-    sudo -u $user git clone "$gitRepository" "$installFolder"
+    # the global mode needs root credentials
+    if [ "$UID" -ne "$ROOT_UID" ]; then
+        echo "You need root credentials to install that script into \"$TARGET_FOLDER\"."
+        exit 1
+    fi
 
-    echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
-else
-    echo "The target install folder \"$installFolder\" already exists → skip.."
+    # get the executive user
+    user=$SUDO_USER
+    group=$(id -g -n $user)
+
+    # calculate git target paths
+    installFolder="$TARGET_FOLDER/$nameRepository"
+
+    # install this project to install folder
+    if [ ! -d "$installFolder" ]; then
+        # create install folder
+        mkdir -p "$installFolder"
+        chown $user:$group "$installFolder"
+        sudo -u $user git clone "$gitRepository" "$installFolder"
+
+        echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
+    else
+        echo "The target install folder \"$installFolder\" already exists → skip.."
+    fi
+
+    # install the global scripts
+    for installableAppSource in "${!installableApps[@]}"; do
+        installableAppTarget="${installableApps[$installableAppSource]}"
+
+        sourceScript="$installFolder/$installableAppSource"
+
+        if [ "$installableAppTarget" == "" ]; then
+            targetScript="$EXECUTIVE_FOLDER/$nameRepository"
+        else
+            targetScript="$EXECUTIVE_FOLDER/$nameRepository-$installableAppTarget"
+        fi
+
+        # delete true file
+        if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
+            rm "$targetScript"
+        fi
+
+        # delete symlink with wrong target
+        if [ -L "$targetScript" ]; then
+            targetSymlinkPath=$(readlink -f "$targetScript")
+
+            if [ "$targetSymlinkPath" != "$sourceScript" ]; then
+                echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
+                rm "$sourceScript"
+            fi
+        fi
+
+        # add symlink if the link doesn't exist
+        if [ ! -L "$targetScript" ]; then
+            echo "create symlink \"$targetScript\"."
+            ln -s "$sourceScript" "$targetScript"
+        else
+            echo "$targetScript already exists → skip.."
+        fi
+    done
+}
+
+# check the current target path
+executionPathIsTarget=false
+if [[ "$pathRoot" =~ "$TARGET_FOLDER" ]]; then
+    executionPathIsTarget=true
 fi
 
-# install the global scripts
-for installableApp in "${installableApps[@]}"; do
-    sourceScript="$installFolder/$installableApp"
-    targetScript="$EXECUTIVE_FOLDER/$nameRepository-$installableApp"
+# initial values
+EXECUTION_TYPE="install"
 
-    # delete true file
-    if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
-        rm "$targetScript"
-    fi
+# declare parameter list array
+PARAMETERS=()
 
-    # delete symlink with wrong target
-    if [ -L "$targetScript" ]; then
-        targetSymlinkPath=$(readlink -f "$targetScript")
+# read arguments
+while [[ $# > 0 ]]; do
+    case "$1" in
+        # install mode
+        --install)
+            EXECUTION_TYPE="install"
+            ;;
 
-        if [ "$targetSymlinkPath" != "$sourceScript" ]; then
-            echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
-            rm "$sourceScript"
-        fi
-    fi
+        # json option (2 parameter)
+        --update)
+            EXECUTION_TYPE="update"
+            ;;
 
-    # add symlink if the link doesn't exist
-    if [ ! -L "$targetScript" ]; then
-        echo "create symlink \"$targetScript\"."
-       ln -s "$sourceScript" "$targetScript"
-    else
-        echo "$targetScript already exists → skip.."
-    fi
+        # collect these unknown parameters
+        *)
+            PARAMETERS+=("$1")
+            ;;
+    esac
+    shift
 done
+
+# execute function according the execution type
+case $EXECUTION_TYPE in
+    install)
+        install "$gitRepository" "$nameRepository"
+        ;;
+
+    # other character
+    *)
+        echo 'unknown execution type'
+        ;;
+
+esac
 
 
