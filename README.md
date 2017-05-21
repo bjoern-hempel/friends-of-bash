@@ -85,4 +85,3 @@ TODO: Describe the usage of this library here.
 ## License
 
 MIT © [Björn Hempel](https://www.ixno.de)
-# 
