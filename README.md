@@ -1,6 +1,6 @@
 # friends-of-bash
 
-Friends of Ba$h. A collection of useful bash functions. Easy to include in your bash scripts. 
+Friends of Ba$h. A collection of useful bash functions. Easy to include in your bash scripts.
 
 ## A.) First usage
 
