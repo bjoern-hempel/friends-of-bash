@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# ------------
+# Normalize the given tags result.
+#
+# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2017-05-21)
+# ------------
+normalizeTagResult ()
+{   
+    local tagResult="$1"
+    local filter="$2"
+    
+    local normalizedTagResult=$(echo "$tagResult" | \
+        awk '{print $2}' | \
+        cut -d '/' -f 3 | \
+        cut -d '^' -f 1  | \
+        uniq)
+    
+    # filter the result
+    if [ "$filter" != "" ]; then
+        normalizedTagResult=$(echo "$normalizedTagResult" | grep "\-$filter" --color=never)
+    fi
+    
+    echo "$normalizedTagResult"
+}
+
+# ------------
+# Gets the last staging or prod tag
+#
+# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2017-05-21)
+# ------------
+getLastTagByGivenList ()
+{
+    local maxVersion=""
+
+    for version in $(normalizeTagResult "$1" "$2"); do
+        if [ "$maxVersion" == "" ]; then
+            maxVersion="$version"
+        fi
+
+        if compareVersionIsGreater "$version" "$maxVersion"; then
+            maxVersion="$version"
+        fi
+    done
+
+    echo "$maxVersion"
+}
+
+# ------------
+# Gets the last staging or prod tag
+#
+# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2017-05-21)
+# ------------
+getLastTagByGivenRepository ()
+{
+  local gitRepo="$1"
+  local filter="$2"
+
+  local tagResult=$(git ls-remote -t "$gitRepo")
+
+  echo $(getLastTagByGivenList "$tagResult" "$filter")
+}
+

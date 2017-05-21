@@ -3,3 +3,76 @@
    BASH_LIB_NAME="friends-of-bash lib"
 BASH_LIB_VERSION="1.0"
 
+
+# ------------
+# Compares two given version strings
+#
+# result could be
+# 0 - the versions are equal
+# 1 - the first given version is greater then the second one
+# 2 - the second given version is lower than the second one
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-21)
+# ------------
+compareVersions ()
+{
+    # remove unallowed signes
+    local version1=$(echo "$1" | sed 's/[^0-9.]//ig')
+    local version2=$(echo "$2" | sed 's/[^0-9.]//ig')
+
+    # equal versions
+    if [[ "$version1" == "$version2" ]]; then
+        return 0
+    fi
+
+    local IFS=.
+    local i version1=($version1) version2=($version2)
+
+    # fill empty fields in version1 with zeros
+    for ((i=${#version1[@]}; i<${#version2[@]}; i++)); do
+        version1[i]=0
+    done
+
+    # compare the versions
+    for ((i=0; i<${#version1[@]}; i++)); do
+        # fill empty fields in version2 with zeros
+        if [[ -z ${version2[i]} ]]; then
+            version2[i]=0
+        fi
+
+        # version 1 is greater then version 2
+        if ((10#${version1[i]} > 10#${version2[i]})); then
+            return 1
+        fi
+
+        # version 2 is greater then version 1
+        if ((10#${version1[i]} < 10#${version2[i]})); then
+            return 2
+        fi
+    done
+
+    # normally this should not be happened
+    return 0
+}
+
+# ------------
+# Given first version is greater then the second one.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-05-21)
+# ------------
+compareVersionIsGreater ()
+{
+    compareVersions "$1" "$2"
+
+    lastStatus=$?
+
+    if [ $lastStatus -eq 1 ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+

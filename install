@@ -71,7 +71,16 @@ if [ "$nameRepository" == "" ]; then
     exit 1
 fi
 
-# install function
+# include the complete friends of bash library
+source "$pathRoot/lib/all"
+
+
+# ------------
+# install method
+#
+# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2017-05-21)
+# ------------
 install ()
 {
     local gitRepository="$1"
@@ -139,6 +148,40 @@ install ()
     done
 }
 
+# ------------
+# status method
+#
+# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @version 1.0 (2017-05-21)
+# ------------
+status ()
+{
+    local gitRepository="$1"
+    local nameRepository="$2"
+
+    local localHash=$(git rev-parse HEAD)
+    local remoteHash=$(git ls-remote "$gitRepository" | head -1 | sed "s/HEAD//")
+
+    local localVersion=$(git describe)
+    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
+
+    echo "Currently installed version:   $localVersion"
+    echo "Available version:             $remoteVersion"
+    echo
+    echo "Currently installed changeset: $localHash"
+    echo "Available changeset:           $remoteHash"
+    echo
+
+    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+        echo "Your friends of bash version is up to date. Nothing to do here."
+        echo
+    else
+        echo "Your friends of bash library version is not up to date. Please update with:"
+        echo "user\$ $0 --update"
+        echo
+    fi
+}
+
 # check the current target path
 executionPathIsTarget=false
 if [[ "$pathRoot" =~ "$TARGET_FOLDER" ]]; then
@@ -154,12 +197,17 @@ PARAMETERS=()
 # read arguments
 while [[ $# > 0 ]]; do
     case "$1" in
+        # status mode
+        --status)
+            EXECUTION_TYPE="status"
+            ;;
+
         # install mode
         --install)
             EXECUTION_TYPE="install"
             ;;
 
-        # json option (2 parameter)
+        # update mode
         --update)
             EXECUTION_TYPE="update"
             ;;
@@ -176,6 +224,10 @@ done
 case $EXECUTION_TYPE in
     install)
         install "$gitRepository" "$nameRepository"
+        ;;
+
+    status)
+        status "$gitRepository" "$nameRepository"
         ;;
 
     # other character
