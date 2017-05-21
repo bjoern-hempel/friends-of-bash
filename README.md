@@ -81,3 +81,8 @@ TODO: Describe the usage of this library here.
 21. [string](docs/README-STRING.md)
 22. [system](docs/README-SYSTEM.md)
 23. [version](docs/README-VERSION.md)
+
+## License
+
+MIT © [Björn Hempel](https://www.ixno.de)
+# 
