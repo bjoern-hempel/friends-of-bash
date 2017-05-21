@@ -1,4 +1,4 @@
 # friends-of-bash
 
-Describes the array library
+Describes the docker-image library
 
