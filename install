@@ -159,12 +159,15 @@ status ()
     local gitRepository="$1"
     local nameRepository="$2"
 
-    local localHash=$(git rev-parse HEAD)
-    local remoteHash=$(git ls-remote "$gitRepository" | head -1 | sed "s/HEAD//")
+    local localHash=$(getCurrentChangesetFromLocal)
+    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
 
-    local localVersion=$(git describe)
+    local localVersion=$(getCurrentTagFromLocal)
     local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
 
+    echo
+    echo "$nameRepository"
+    echo
     echo "Currently installed version:   $localVersion"
     echo "Available version:             $remoteVersion"
     echo

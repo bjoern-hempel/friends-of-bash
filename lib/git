@@ -3,7 +3,7 @@
 # ------------
 # Normalize the given tags result.
 #
-# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
 normalizeTagResult ()
@@ -28,7 +28,7 @@ normalizeTagResult ()
 # ------------
 # Gets the last staging or prod tag
 #
-# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
 getLastTagByGivenList ()
@@ -45,13 +45,13 @@ getLastTagByGivenList ()
         fi
     done
 
-    echo "$maxVersion"
+    echo "$maxVersion" | xargs
 }
 
 # ------------
 # Gets the last staging or prod tag
 #
-# @author  Björn Hempel <bjoern.hempel@ressourcenmangel.de>
+# @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
 getLastTagByGivenRepository ()
@@ -62,5 +62,38 @@ getLastTagByGivenRepository ()
   local tagResult=$(git ls-remote -t "$gitRepo")
 
   echo $(getLastTagByGivenList "$tagResult" "$filter")
+}
+
+# ------------
+# Gets the current local tag
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+getCurrentTagFromLocal ()
+{
+    echo $(git describe | xargs)
+}
+
+# ------------
+# Gets the last changeset hash from given repository
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+getLastChangesetFromGivenRepository ()
+{
+    git ls-remote "$1" | head -1 | sed "s/HEAD//" | xargs
+}
+
+# ------------
+# Gets the current changeset from local installation
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+getCurrentChangesetFromLocal ()
+{
+    git rev-parse HEAD | xargs
 }
 
