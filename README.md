@@ -2,9 +2,9 @@
 
 Friends of Ba$h. A collection of useful bash functions. Easy to include in your bash scripts.
 
-## A.) First usage
+## 1.) First usage
 
-### A.1) installation & show version
+### 1.1) installation & show version
 
 ```
 user$ cd ~
@@ -17,7 +17,7 @@ user$ friends-of-bash --version
 friends-of-bash/v0.0.5 (04b96992e3623e1270496fa04d0fe6dc6cc9a9f2)
 ```
 
-### A.2) show help
+### 1.2) show help
 
 ```
 user$ friends-of-bash --help
@@ -29,7 +29,7 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 
 ```
 
-### A.3) show status
+### 1.3) show status
 
 ```
 $ friends-of-bash status
@@ -44,5 +44,11 @@ Available changeset:           67f7aade0275f01037b531764b1cc2e75b63ce45
 
 Your friends of bash library version is not up to date. Please update with:
 user$ /usr/local/bin/friends-of-bash update
+```
+
+### 1.4) update library
+
+```
+$ friends-of-bash update
 ```
 
