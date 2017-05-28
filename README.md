@@ -10,7 +10,7 @@ Friends of Ba$h. A collection of useful bash functions. Easy to include in your 
 user$ cd ~
 user$ git clone git@github.com:bjoern-hempel/friends-of-bash.git
 user$ cd friends-of-bash
-user$ sudo ./install
+user$ sudo SSH_AUTH_SOCK=$SSH_AUTH_SOCK ./install
 user$ cd ..
 user$ rm -rf friends-of-bash
 user$ friends-of-bash --version
