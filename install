@@ -107,7 +107,7 @@ install ()
         # create install folder
         mkdir -p "$installFolder"
         chown $user:$group "$installFolder"
-        sudo -u $user git clone "$gitRepository" "$installFolder"
+        sudo -u $user SSH_AUTH_SOCK=$SSH_AUTH_SOCK git clone "$gitRepository" "$installFolder"
 
         echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
     else
