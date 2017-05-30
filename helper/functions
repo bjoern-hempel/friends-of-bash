@@ -83,9 +83,20 @@ install ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-update ()
+update()
 {
     local pathRoot="$1"
+    local name="$2"   
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "$name" != "" ]; then
+        pathRoot="$friendsOfBashCollectionPoint/$name"
+
+        if [ ! -d "$pathRoot/.git" ]; then
+            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
+        fi
+    fi
 
     eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
 
@@ -100,12 +111,12 @@ update ()
 
     # no update is available
     if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
-        echo "Your friends of bash version is up to date. Nothing to do here."
+        echo "Your \"$pathRoot\" version is up to date. Nothing to do here."
         return 0
     fi
 
     while true; do
-        read -n 1 -p "Do you really want to update the current version \"$localVersion\" to \"$remoteVersion\"? Type (y)es or (no): " yn
+        read -n 1 -p "Do you really want to update the current version \"$localVersion\" from \"$pathRoot\" to \"$remoteVersion\"? Type (y)es or (no): " yn
         case $yn in
             # yes
             [Yy]*)
