@@ -1,0 +1,288 @@
+#!/bin/bash
+
+# ------------
+# install method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+install ()
+{
+    local pathRoot="$1"
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    # the global mode needs root credentials
+    if [ "$UID" -ne "$ROOT_UID" ]; then
+        echo "You need root credentials to install that script into \"$TARGET_FOLDER\"."
+        exit 1
+    fi
+
+    # get the executive user
+    user=$SUDO_USER
+    group=$(id -g -n $user)
+
+    # calculate git target paths
+    installFolder="$TARGET_FOLDER/$nameRepository"
+
+    # install this project to install folder
+    if [ ! -d "$installFolder" ]; then
+        # create install folder
+        mkdir -p "$installFolder"
+        chown $user:$group "$installFolder"
+        sudo -u $user SSH_AUTH_SOCK=$SSH_AUTH_SOCK git clone "$gitRepository" "$installFolder"
+
+        echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
+    else
+        echo "The target install folder \"$installFolder\" already exists → skip.."
+    fi
+
+    # install the global scripts
+    for installableAppSource in "${!installableApps[@]}"; do
+        installableAppTarget="${installableApps[$installableAppSource]}"
+
+        sourceScript="$installFolder/$installableAppSource"
+
+        if [ "$installableAppTarget" == "" ]; then
+            targetScript="$EXECUTIVE_FOLDER/$nameRepository"
+        else
+            targetScript="$EXECUTIVE_FOLDER/$nameRepository-$installableAppTarget"
+        fi
+
+        # delete true file
+        if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
+            rm "$targetScript"
+        fi
+
+        # delete symlink with wrong target
+        if [ -L "$targetScript" ]; then
+            targetSymlinkPath=$(readlink -f "$targetScript")
+
+            if [ "$targetSymlinkPath" != "$sourceScript" ]; then
+                echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
+                rm "$sourceScript"
+            fi
+        fi
+
+        # add symlink if the link doesn't exist
+        if [ ! -L "$targetScript" ]; then
+            echo "create symlink \"$targetScript\"."
+            ln -s "$sourceScript" "$targetScript"
+        else
+            echo "$targetScript already exists → skip.."
+        fi
+    done
+}
+
+# ------------
+# update method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+update ()
+{
+    local pathRoot="$1"
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
+
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
+
+    # no update is available
+    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+        echo "Your friends of bash version is up to date. Nothing to do here."
+        return 0
+    fi
+
+    while true; do
+        read -n 1 -p "Do you really want to update the current version \"$localVersion\" to \"$remoteVersion\"? Type (y)es or (no): " yn
+        case $yn in
+            # yes
+            [Yy]*)
+                break
+                ;;
+            # no
+            [Nn]*)
+                echo
+                echo "The update was cancelled by user."
+                exit
+                ;;
+            # escape
+            $'\e')
+                echo
+                echo "The update was cancelled by user."
+                exit
+                ;;
+            # other character
+            *)
+                echo
+                ;;
+        esac
+    done
+
+    echo
+    git -C "$pathRoot" pull
+}
+
+# ------------
+# status method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+status ()
+{
+    local pathRoot="$1"
+    local name="$2"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "$name" != "" ]; then
+        pathRoot="$friendsOfBashCollectionPoint/$name"
+
+        if [ ! -d "$pathRoot/.git" ]; then
+            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
+        fi
+    fi
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
+
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
+
+    echo
+    echo "$nameRepository"
+    echo
+    echo "Currently installed version:   $localVersion"
+    echo "Available version:             $remoteVersion"
+    echo
+    echo "Currently installed changeset: $localHash"
+    echo "Available changeset:           $remoteHash"
+    echo
+
+    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+        echo "Your \"$pathRoot\" version is up to date. Nothing to do here."
+        echo
+    else
+        echo "Your \"$pathRoot\" version is not up to date. Please update with:"
+        echo "user\$ $0 update $nameRepository"
+        echo
+    fi
+}
+
+# ------------
+# list method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+list()
+{
+    local pathRoot="$1"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    for nameRepository in $(ls "$friendsOfBashCollectionPoint"); do
+        directoryRepository="$friendsOfBashCollectionPoint/$nameRepository"
+
+        if [ ! -d "$directoryRepository/.git" ]; then
+            continue;
+        fi
+
+        local repositoryVersion=$(getRepositoryVersion "$directoryRepository")
+
+        echo "$nameRepository - $repositoryVersion"
+    done
+}
+
+# ------------
+# Shows the version number of this library.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+showVersion()
+{
+    getRepositoryVersion "$pathRoot"
+}
+
+# ------------
+# Gets the version number of this library.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getRepositoryVersion()
+{
+    local pathRoot="$1"
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+
+    echo "$nameRepository/$localVersion"
+}
+
+# ------------
+# Gets some repository values.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getRepositoryValues()
+{
+    local pathRoot="$1"
+
+    # try to get the git repository source and the name of that repository
+    if [ -f "$pathRoot/.git/config" ]; then
+        gitRepository=$(cat "$pathRoot/.git/config" | grep "url =" | awk '{print $3}')
+        [[ "$gitRepository" =~ ([a-zA-Z0-9._-]+)(.git$) ]] && nameRepository="${BASH_REMATCH[1]}" || nameRepository=""
+    else
+        gitRepository=""
+        nameRepository=""
+    fi
+
+    # check git repository config
+    if [ "$gitRepository" == "" ]; then
+        echo "No git repository config found → abort.."
+        exit 1
+    fi
+
+    # check git name
+    if [ "$nameRepository" == "" ]; then
+        echo "Not able to extract the name of repository → abort.."
+        exit 1
+    fi
+
+    declare -A ret=()
+
+    ret[name]="$nameRepository"
+    ret[git]="$gitRepository"
+
+    local retDeclare=$(declare -p ret)
+
+    echo "${retDeclare#*=}"
+
+    return 0
+}
+

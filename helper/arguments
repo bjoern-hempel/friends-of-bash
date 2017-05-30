@@ -42,3 +42,8 @@ if [ ! -z ${PARAMETERS[0]} ]; then
     executionType="${PARAMETERS[0]}"
 fi
 
+# assign mode to executionName var
+if [ ! -z ${PARAMETERS[1]} ]; then
+    executionName="${PARAMETERS[1]}"
+fi
+
