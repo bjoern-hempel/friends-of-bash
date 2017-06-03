@@ -35,7 +35,7 @@ install ()
 
     # calculate git target paths
     installFolder="$TARGET_FOLDER/$nameRepository"
-      installFile="$installFolder/install"
+    installSource="$installFolder/install"
 
     # install this project to install folder
     if [ ! -d "$installFolder" ]; then
@@ -46,50 +46,47 @@ install ()
 
         echo "git repository \"$gitRepository\" successfully installed into \"$installFolder\"."
     else
-        echo "The target install folder \"$installFolder\" already exists → skip.."
+        echo "The target install folder \"$installFolder\" already exists → skip.." && return 1
     fi
 
     # check for install file, execute it and exit function
-    if [ -f "$installFile" ] && [ -x "$installFile" ]; then
-        $installFile
+    if [ -f "$installSource" ] && [ -x "$installSource" ]; then
+        $installSource
+        return $?
+    fi
+
+    # check for install folder, install symlinks and exit function
+    if [ -d "$installSource" ]; then
+        for installFile in $(ls "$installSource"); do
+            sourceScript=$(readlink -f "$installSource/$installFile")
+            targetScript="$EXECUTIVE_FOLDER/$installFile"
+
+            # delete true file
+            if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
+                rm "$targetScript"
+            fi
+
+            # delete symlink with wrong target
+            if [ -L "$targetScript" ]; then
+                targetSymlinkPath=$(readlink -f "$targetScript")
+
+                if [ "$targetSymlinkPath" != "$sourceScript" ]; then
+                    echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
+                    rm "$sourceScript"
+                fi
+            fi
+
+            # add symlink if the link doesn't exist
+            if [ ! -L "$targetScript" ]; then
+                echo "create symlink \"$targetScript\"."
+                ln -s "$sourceScript" "$targetScript"
+            else
+                echo "$targetScript already exists → skip.."
+            fi
+        done
         return 0
     fi
 
-    # install the global scripts
-    for installableAppSource in "${!installableApps[@]}"; do
-        installableAppTarget="${installableApps[$installableAppSource]}"
-
-        sourceScript="$installFolder/$installableAppSource"
-
-        if [ "$installableAppTarget" == "" ]; then
-            targetScript="$EXECUTIVE_FOLDER/$nameRepository"
-        else
-            targetScript="$EXECUTIVE_FOLDER/$nameRepository-$installableAppTarget"
-        fi
-
-        # delete true file
-        if [ ! -L "$targetScript" ] && [ -f "$targetScript" ]; then
-            rm "$targetScript"
-        fi
-
-        # delete symlink with wrong target
-        if [ -L "$targetScript" ]; then
-            targetSymlinkPath=$(readlink -f "$targetScript")
-
-            if [ "$targetSymlinkPath" != "$sourceScript" ]; then
-                echo "target from symlink \"$targetSymlinkPath\" is wrong (\"$sourceScript\") → delete this symlink"
-                rm "$sourceScript"
-            fi
-        fi
-
-        # add symlink if the link doesn't exist
-        if [ ! -L "$targetScript" ]; then
-            echo "create symlink \"$targetScript\"."
-            ln -s "$sourceScript" "$targetScript"
-        else
-            echo "$targetScript already exists → skip.."
-        fi
-    done
 }
 
 # ------------
