@@ -35,13 +35,6 @@
 TARGET_FOLDER="/opt/friends-of-bash"
 EXECUTIVE_FOLDER="/usr/local/bin"
 
-# some user constants
-ROOT_UID=0
-
-# some user definable variables
-declare -A installableApps
-installableApps[install]=""
-
 # some calculable configs before
 if [ -h "${BASH_SOURCE[0]}" ]; then
     realScriptname=$(readlink "${BASH_SOURCE[0]}")
@@ -51,6 +44,9 @@ else
     scriptname="$0"
     pathRoot="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
+
+# because we are inside the bin folder
+pathRoot="$pathRoot/.."
 
 # include the complete friends of bash library and some other libraries
 source "$pathRoot/lib/all"

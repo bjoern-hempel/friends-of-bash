@@ -12,6 +12,8 @@ install ()
     local  gitRepository="$2"
     local nameRepository=""
 
+    local ROOT_UID=0
+
     if [ "$gitRepository" == "" ]; then
         eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
         [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
