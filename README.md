@@ -7,8 +7,7 @@ Friends of Ba$h. A collection of useful bash functions. Easy to include in your 
 ### 1.1) installation & show version
 
 ```
-user$ cd ~
-user$ git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
+user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
 user$ sudo -E bin/install
 user$ cd .. && rm -rf friends-of-bash
 user$ friends-of-bash --version
