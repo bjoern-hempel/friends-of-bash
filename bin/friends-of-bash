@@ -46,7 +46,7 @@ else
 fi
 
 # because we are inside the bin folder
-pathRoot="$pathRoot/.."
+pathRoot=$(dirname "$pathRoot")
 
 # include the complete friends of bash library and some other libraries
 source "$pathRoot/lib/all"

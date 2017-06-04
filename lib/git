@@ -56,12 +56,18 @@ getLastTagByGivenList ()
 # ------------
 getLastTagByGivenRepository ()
 {
-  local gitRepo="$1"
-  local filter="$2"
+    local gitRepo="$1"
+    local filter="$2"
 
-  local tagResult=$(git ls-remote -t "$gitRepo")
+    local tagResult=$(git ls-remote -t "$gitRepo")
 
-  echo $(getLastTagByGivenList "$tagResult" "$filter")
+    local tagName=$(getLastTagByGivenList "$tagResult" "$filter")
+
+    if [ "$tagName" == "" ]; then
+        echo "v0.0.0"
+    fi
+
+    echo "$tagName"
 }
 
 # ------------
