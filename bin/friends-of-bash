@@ -79,6 +79,10 @@ case $executionType in
         status "$pathRoot" "$executionName"
         ;;
 
+    version)
+        version "$pathRoot" "$executionName"
+        ;;
+
     update)
         update "$pathRoot" "$executionName"
         ;;

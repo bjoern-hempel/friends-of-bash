@@ -6,7 +6,7 @@
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-install ()
+install()
 {
     local       pathRoot="$1"
     local  gitRepository="$2"
@@ -166,7 +166,7 @@ update()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-status ()
+status()
 {
     local pathRoot="$1"
     local name="$2"
@@ -239,6 +239,32 @@ list()
 }
 
 # ------------
+# version method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-04)
+# ------------
+version()
+{
+    local pathRoot="$1"
+    local name="$2"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "$name" != "" ]; then
+        pathRoot="$friendsOfBashCollectionPoint/$name"
+
+        if [ ! -d "$pathRoot/.git" ]; then
+            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
+        fi
+    fi
+
+    local version=$(getRepositoryVersion "$pathRoot")
+
+    echo "$version"
+}
+
+# ------------
 # Shows the version number of this library.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -248,5 +274,4 @@ showVersion()
 {
     getRepositoryVersion "$pathRoot"
 }
-
 
