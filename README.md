@@ -9,10 +9,10 @@ Friends of Ba$h. A collection of useful bash functions. Easy to include in your 
 ```
 user$ cd ~
 user$ git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
-user$ sudo -E ./install
+user$ sudo -E bin/install
 user$ cd .. && rm -rf friends-of-bash
 user$ friends-of-bash --version
-friends-of-bash/v0.0.5 (04b96992e3623e1270496fa04d0fe6dc6cc9a9f2)
+friends-of-bash/v0.0.11
 ```
 
 ### 1.2) show help
