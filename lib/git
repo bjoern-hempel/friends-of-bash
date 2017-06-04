@@ -121,3 +121,88 @@ getCurrentChangesetFromGivenPath ()
     git -C "$gitDir" rev-parse HEAD | xargs
 }
 
+# ------------
+# Gets the version number of this library.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getRepositoryVersion()
+{
+    local pathRoot="$1"
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+    [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+
+    echo "$nameRepository/$localVersion"
+}
+
+# ------------
+# Extract the name from the given repository.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-03)
+# ------------
+getRepositoryNameFromGivenRepository()
+{
+    if [[ "$1" =~ ([a-zA-Z0-9._-]+)(.git$) ]]; then
+        echo -n "${BASH_REMATCH[1]}"
+        return 0
+    fi
+
+    >&2 echo "Error: no repository name was found"
+    return 1
+}
+
+# ------------
+# Gets some repository values.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-30)
+# ------------
+getRepositoryValues()
+{
+    local pathRoot="$1"
+
+    local  gitRepository=""
+    local nameRepository=""
+
+    # try to get the git repository source and the name of that repository
+    if [ -f "$pathRoot/.git/config" ]; then
+         gitRepository=$(cat "$pathRoot/.git/config" | grep "url =" | awk '{print $3}')
+        nameRepository=$(getRepositoryNameFromGivenRepository "$gitRepository")
+    else
+         gitRepository=""
+        nameRepository=""
+    fi
+
+    # check git repository config
+    if [ "$gitRepository" == "" ]; then
+        >&2 echo "Error: no git repository config found"
+        return 1
+    fi
+
+    # check git name
+    if [ "$nameRepository" == "" ]; then
+        >&2 echo "Error: not able to extract the name of repository"
+        return 2
+    fi
+
+    declare -A ret=()
+
+    ret[name]="$nameRepository"
+    ret[git]="$gitRepository"
+
+    local retDeclare=$(declare -p ret)
+
+    echo "${retDeclare#*=}"
+
+    return 0
+}
+
