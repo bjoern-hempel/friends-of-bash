@@ -105,12 +105,45 @@ getLastChangesetFromGivenRepository ()
 }
 
 # ------------
+# Gets the last remote changeset from connected repository of given path.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+getLastRemoteChangesetFromGivenPath()
+{
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$gitDir")
+    [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
+
+    local nameRepository="${repositoryValues[name]}"
+    local gitBranch="${repositoryValues[branch]}"
+    local nameAuthor="${repositoryValues[author]}"
+
+    local githubUrl="https://api.github.com/repos/$nameAuthor/$nameRepository/git/refs/heads/$gitBranch"
+    local      json=$(curl -s "$githubUrl")
+    local   message=$(echo "$json" | jq '.message' | tr -d '"')
+
+    if [ "$message" == "Not Found" ]; then
+        >&2 echo "The git head $gitBranch was not found ($githubUrl)."
+        return 1
+    fi
+
+    echo "$json" | jq '.object.sha' | tr -d '"'
+}
+
+# ------------
 # Gets the current changeset from local installation
 #
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getCurrentChangesetFromGivenPath ()
+getCurrentChangesetFromGivenPath()
 {
     local gitDir="$1"
 
@@ -119,6 +152,23 @@ getCurrentChangesetFromGivenPath ()
     fi
 
     git -C "$gitDir" rev-parse HEAD | xargs
+}
+
+# ------------
+# Gets the current branchname from local installation
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
+getCurrentBranchFromGivenPath()
+{
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    git -C "$gitDir" branch | grep "^\*" | sed 's/^\* //'
 }
 
 # ------------
@@ -161,6 +211,25 @@ getRepositoryNameFromGivenRepository()
 }
 
 # ------------
+# Extract the author name from the given repository.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
+getNameAuthorFromGivenRepository()
+{
+    local authorName=$(echo "$1" | grep -oP '^[^:]+:\K[^/]+')
+
+    if [ "$authorName" != "" ]; then
+        echo -n "$authorName"
+        return 0
+    fi
+
+    >&2 echo "Error: no author name was found"
+    return 1
+}
+
+# ------------
 # Gets some repository values.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -177,9 +246,13 @@ getRepositoryValues()
     if [ -f "$pathRoot/.git/config" ]; then
          gitRepository=$(cat "$pathRoot/.git/config" | grep "url =" | awk '{print $3}')
         nameRepository=$(getRepositoryNameFromGivenRepository "$gitRepository")
+             gitBranch=$(getCurrentBranchFromGivenPath "$pathRoot")
+            nameAuthor=$(getNameAuthorFromGivenRepository "$gitRepository")
     else
          gitRepository=""
         nameRepository=""
+             gitBranch=""
+            nameAuthor=""
     fi
 
     # check git repository config
@@ -196,8 +269,10 @@ getRepositoryValues()
 
     declare -A ret=()
 
-    ret[name]="$nameRepository"
-    ret[git]="$gitRepository"
+      ret[name]="$nameRepository"
+       ret[git]="$gitRepository"
+    ret[branch]="$gitBranch"
+    ret[author]="$nameAuthor"
 
     local retDeclare=$(declare -p ret)
 
