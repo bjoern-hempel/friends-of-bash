@@ -88,6 +88,13 @@ lrwxrwxrwx 1 root staff  62 Jun  4 20:01 apache-host-viewer -> /opt/friends-of-b
 ...
 ```
 
+You can execute this symlink `apache-host-viewer` from anywhere you want to like this:
+
+```
+user$ apache-host-viewer --version
+apache-host-viewer/v0.0.2
+```
+
 ### 1.2) list all packages installed via `friends-of-bash install`
 
 ```
