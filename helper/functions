@@ -100,6 +100,28 @@ install()
 update()
 {
     local pathRoot="$1"
+    local     name="$2"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "${name,,}" == "all" ]; then
+        for nameRepository in $(ls "$friendsOfBashCollectionPoint"); do
+            local directoryRepository="$friendsOfBashCollectionPoint/$nameRepository"
+
+            if [ ! -d "$directoryRepository/.git" ]; then
+                continue;
+            fi
+
+            doUpdate "$pathRoot" "$nameRepository"
+        done
+    else
+        doUpdate "$pathRoot" "$name"
+    fi
+}
+
+doUpdate()
+{
+    local pathRoot="$1"
     local name="$2"   
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
@@ -141,13 +163,13 @@ update()
             [Nn]*)
                 echo
                 echo "The update was cancelled by user."
-                exit
+                return 1
                 ;;
             # escape
             $'\e')
                 echo
                 echo "The update was cancelled by user."
-                exit
+                return 1
                 ;;
             # other character
             *)
