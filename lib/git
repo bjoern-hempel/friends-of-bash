@@ -9,7 +9,7 @@
 getWorkingTreeParameterName()
 {
     git --help | grep "\-C <path>" | \
-        { read ret; [ "$ret" == "" ] && echo "work-tree" || echo "C"; }
+        { read ret; [ "$ret" == "" ] && echo "-work-tree" || echo "C"; }
 }
 
 # ------------
