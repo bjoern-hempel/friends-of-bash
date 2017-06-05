@@ -291,13 +291,10 @@ updateAvailable()
     local gitRepository="${repositoryValues[git]}"
     local nameRepository="${repositoryValues[name]}"
 
-    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
-    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
+    local  localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local remoteHash=$(getLastRemoteChangesetFromGivenPath "$pathRoot")
 
-    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
-    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
-
-    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+    if [ "$localHash" == "$remoteHash" ]; then
         echo "0"
     else
         echo "1"
