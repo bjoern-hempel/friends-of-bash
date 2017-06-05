@@ -1,6 +1,18 @@
 #!/bin/bash
 
 # ------------
+# Returns the working tree parameter name.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
+getWorkingTreeParameterName()
+{
+    git --help | grep "\-C <path>" | \
+        { read ret; [ "$ret" == "" ] && echo "work-tree" || echo "C"; }
+}
+
+# ------------
 # Normalize the given tags result.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -84,7 +96,9 @@ getCurrentTagFromGivenPath ()
         gitDir=$(pwd)
     fi
 
-    local tagName=$(git -C "$gitDir" describe 2>/dev/null | xargs | sed 's~-[0-9]\+-[A-Za-z0-9]\+$~~')
+    local workingTreeParameterName=$(getWorkingTreeParameterName)
+
+    local tagName=$(git -$workingTreeParameterName "$gitDir" describe 2>/dev/null | xargs | sed 's~-[0-9]\+-[A-Za-z0-9]\+$~~')
 
     if [ "$tagName" == "" ]; then
         echo "v0.0.0"
@@ -151,7 +165,9 @@ getCurrentChangesetFromGivenPath()
         gitDir=$(pwd)
     fi
 
-    git -C "$gitDir" rev-parse HEAD | xargs
+    local workingTreeParameterName=$(getWorkingTreeParameterName)
+
+    git -$workingTreeParameterName "$gitDir" rev-parse HEAD | xargs
 }
 
 # ------------
@@ -168,7 +184,9 @@ getCurrentBranchFromGivenPath()
         gitDir=$(pwd)
     fi
 
-    git -C "$gitDir" branch | grep "^\*" | sed 's/^\* //'
+    local workingTreeParameterName=$(getWorkingTreeParameterName)
+
+    git -$workingTreeParameterName "$gitDir" branch | grep "^\*" | sed 's/^\* //'
 }
 
 # ------------
