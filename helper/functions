@@ -199,6 +199,34 @@ doUpdate()
 status()
 {
     local pathRoot="$1"
+    local     name="$2"
+    
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+    
+    if [ "${name,,}" == "all" ]; then
+        for nameRepository in $(ls "$friendsOfBashCollectionPoint"); do
+            local directoryRepository="$friendsOfBashCollectionPoint/$nameRepository"
+            
+            if [ ! -d "$directoryRepository/.git" ]; then
+                continue;
+            fi
+            
+            doStatus "$pathRoot" "$nameRepository"
+        done
+    else
+        doStatus "$pathRoot" "$name"
+    fi
+}
+
+# ------------
+# do status method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
+doStatus()
+{
+    local pathRoot="$1"
     local name="$2"
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
@@ -225,6 +253,8 @@ status()
 
     echo
     echo "$nameRepository"
+    printf "%${#nameRepository}s" |tr " " "-"
+    echo
     echo
     echo "Currently installed version:   $localVersion"
     echo "Available version:             $remoteVersion"
