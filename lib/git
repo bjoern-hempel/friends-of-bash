@@ -110,6 +110,23 @@ getCurrentTagFromGivenPath()
 }
 
 # ------------
+# Gets the next revision tag.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-06)
+# ------------
+getNextTagFromGivenPath()
+{
+    local tag=$(getCurrentTagFromGivenPath "$1")
+
+    withoutRevision=$(echo "$tag" | sed 's/[0-9]\+$//')
+           revision=$(echo "$tag" | sed 's/^v[0-9]\+\.[0-9]\+\.//')
+       nextRevision=$((revision+1))
+
+    echo "$withoutRevision$nextRevision"
+}
+
+# ------------
 # Gets the last changeset hash from given repository.
 # This method doesn't work with sudo (without -E),
 # because the git private key is needed.
