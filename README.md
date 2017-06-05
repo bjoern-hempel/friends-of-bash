@@ -4,7 +4,7 @@ Friends of Ba$h. A collection of useful bash functions. Easy to include in your 
 
 ## 1.) First usage
 
-### 1.1) installation & show version
+### 1.1) Installation & show version
 
 ```
 user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd friends-of-bash
@@ -14,7 +14,7 @@ user$ friends-of-bash --version
 friends-of-bash/v0.0.11
 ```
 
-### 1.2) show help
+### 1.2) Show help
 
 ```
 user$ friends-of-bash --help
@@ -26,7 +26,7 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 
 ```
 
-### 1.3) show status
+### 1.3) Show status
 
 ```
 $ friends-of-bash status
@@ -43,17 +43,74 @@ Your friends of bash library version is not up to date. Please update with:
 user$ /usr/local/bin/friends-of-bash update
 ```
 
-### 1.4) update library
+### 1.4) Update library
 
 ```
 $ friends-of-bash update
 ```
 
-## 2.) Usage
+## 2.) Manage other repositories
 
-TODO: Describe the usage of this library here.
+### 1.1) Installation & show version
 
-## 3.) Libraries
+Use the parameter -E to pass through your ssh private key while doing a `sudo git clone`:
+
+```
+user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/apache-host-viewer.git"
+```
+
+or
+
+```
+user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/hello-world.git"
+```
+
+With this technique you can install any git repository you want to. After installation via `friends-of-bash install` you can do the versioning handling with the friends-of-bash helper (see next chapters).
+
+### 1.2) list all packages installed via `friends-of-bash install`
+
+```
+user$ friends-of-bash list
+apache-host-viewer - apache-host-viewer/v0.0.2
+backup-mysql - backup-mysql/v0.0.1
+friends-of-bash - friends-of-bash/v0.0.14
+hello-world - hello-world/v1.0.0
+```
+
+### 1.3) Show status
+
+```
+user$ friends-of-bash status apache-host-viewer
+
+apache-host-viewer
+------------------
+
+Currently installed version:   v0.0.2
+Available version:             v0.0.2
+
+Currently installed changeset: dcb2217b4081bc1124568545ddd6f58e76325191
+Available changeset:           dcb2217b4081bc1124568545ddd6f58e76325191
+
+Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to do here.
+```
+
+### 1.4) Update library
+
+```
+user$ friends-of-bash update apache-host-viewer
+```
+
+### 1.5) Update all libraries
+
+```
+user$ friends-of-bash update all
+```
+
+## 3.) Usage
+
+TODO: Describe the general usage of this library here.
+
+## 4.) Libraries
 
 1. [array](docs/README-ARRAY.md)
 2. [cert](docs/README-CERT.md)
