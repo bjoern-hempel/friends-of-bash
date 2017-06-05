@@ -65,7 +65,19 @@ or
 user$ sudo -E friends-of-bash install "git@github.com:bjoern-hempel/hello-world.git"
 ```
 
-With this technique you can install any git repository you want to. After installation via `friends-of-bash install` you can do the versioning handling with the friends-of-bash helper (see next chapters).
+With this technique you can install any git repository you want to. After installation via `friends-of-bash install` you can do the versioning handling with the friends-of-bash helper (see next chapters). Showing the version numbers:
+
+```
+user$ friends-of-bash version apache-host-viewer
+apache-host-viewer/v0.0.2
+```
+
+or
+
+```
+user$ friends-of-bash version hello-world
+hello-world/v1.0.0
+```
 
 ### 1.2) list all packages installed via `friends-of-bash install`
 
