@@ -178,8 +178,10 @@ doUpdate()
         esac
     done
 
+    local workingTreeParameter=$(getWorkingTreeParameter "$pathRoot")
+
     echo
-    git -C "$pathRoot" pull
+    git $workingTreeParameter pull
 }
 
 # ------------
