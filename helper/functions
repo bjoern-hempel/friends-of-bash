@@ -119,6 +119,12 @@ update()
     fi
 }
 
+# ------------
+# do update method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
 doUpdate()
 {
     local pathRoot="$1"
@@ -288,6 +294,8 @@ version()
     echo "$version"
 }
 
+
+
 # ------------
 # updateAvailable method
 #
@@ -297,7 +305,36 @@ version()
 updateAvailable()
 {
     local pathRoot="$1"
+    local     name="$2"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "${name,,}" == "all" ]; then
+        for nameRepository in $(ls "$friendsOfBashCollectionPoint"); do
+            local directoryRepository="$friendsOfBashCollectionPoint/$nameRepository"
+
+            if [ ! -d "$directoryRepository/.git" ]; then
+                continue;
+            fi
+
+            doUpdateAvailable "$pathRoot" "$nameRepository" true
+        done
+    else
+        doUpdateAvailable "$pathRoot" "$name" false
+    fi
+}
+
+# ------------
+# do updateAvailable method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-05)
+# ------------
+doUpdateAvailable()
+{
+    local pathRoot="$1"
     local name="$2"
+    local showAppName=${3:-false}
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
 
@@ -317,6 +354,10 @@ updateAvailable()
 
     local  localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
     local remoteHash=$(getLastRemoteChangesetFromGivenPath "$pathRoot")
+
+    if $showAppName; then
+        echo -n "$name: "
+    fi
 
     if [ "$localHash" == "$remoteHash" ]; then
         echo "0"
