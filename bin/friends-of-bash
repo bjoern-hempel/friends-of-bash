@@ -91,6 +91,10 @@ case $executionType in
         list "$pathRoot"
         ;;
 
+    updateAvailable)
+        updateAvailable "$pathRoot" "$executionName"
+        ;;
+
     # other character
     *)
         echo 'unknown execution type'

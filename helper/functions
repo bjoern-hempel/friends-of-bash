@@ -265,6 +265,46 @@ version()
 }
 
 # ------------
+# updateAvailable method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-21)
+# ------------
+updateAvailable()
+{
+    local pathRoot="$1"
+    local name="$2"
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "$name" != "" ]; then
+        pathRoot="$friendsOfBashCollectionPoint/$name"
+
+        if [ ! -d "$pathRoot/.git" ]; then
+            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
+        fi
+    fi
+
+    eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+    [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
+
+    local gitRepository="${repositoryValues[git]}"
+    local nameRepository="${repositoryValues[name]}"
+
+    local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
+    local remoteHash=$(getLastChangesetFromGivenRepository "$gitRepository")
+
+    local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
+    local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
+
+    if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+# ------------
 # Shows the version number of this library.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
