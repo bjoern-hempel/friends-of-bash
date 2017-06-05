@@ -18,7 +18,7 @@ getWorkingTreeParameterName()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-normalizeTagResult ()
+normalizeTagResult()
 {   
     local tagResult="$1"
     local filter="$2"
@@ -43,7 +43,7 @@ normalizeTagResult ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getLastTagByGivenList ()
+getLastTagByGivenList()
 {
     local maxVersion=""
 
@@ -66,7 +66,7 @@ getLastTagByGivenList ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getLastTagByGivenRepository ()
+getLastTagByGivenRepository()
 {
     local gitRepo="$1"
     local filter="$2"
@@ -88,7 +88,7 @@ getLastTagByGivenRepository ()
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getCurrentTagFromGivenPath ()
+getCurrentTagFromGivenPath()
 {
     local gitDir="$1"
 
@@ -108,18 +108,22 @@ getCurrentTagFromGivenPath ()
 }
 
 # ------------
-# Gets the last changeset hash from given repository
+# Gets the last changeset hash from given repository.
+# This method doesn't work with sudo (without -E),
+# because the git private key is needed.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
 # ------------
-getLastChangesetFromGivenRepository ()
+getLastChangesetFromGivenRepository()
 {
     git ls-remote "$1" | head -1 | sed "s/HEAD//" | xargs
 }
 
 # ------------
 # Gets the last remote changeset from connected repository of given path.
+# This method doesn't need a private key for github access.
+# It's even usable with sudo (even without the -E parameter).
 #
 # @author  Björn Hempel <bjoern@hempel.li>
 # @version 1.0 (2017-05-21)
