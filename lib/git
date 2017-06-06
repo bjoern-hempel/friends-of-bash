@@ -117,13 +117,41 @@ getCurrentTagFromGivenPath()
 # ------------
 getNextTagFromGivenPath()
 {
-    local tag=$(getCurrentTagFromGivenPath "$1")
+    local position=${2:-2}
 
-    withoutRevision=$(echo "$tag" | sed 's/[0-9]\+$//')
-           revision=$(echo "$tag" | sed 's/^v[0-9]\+\.[0-9]\+\.//')
-       nextRevision=$((revision+1))
+    local currentTag=$(getCurrentTagFromGivenPath "$1")
+    local  searchReg="([0-9]+)\.([0-9]+)\.([0-9]+)$"
 
-    echo "$withoutRevision$nextRevision"
+    if ! [[ "$currentTag" =~ $searchReg ]]; then
+        >&2 echo "Unable to parse the current version \"$currentTag\"."
+        return 1
+    fi
+
+    local major=${BASH_REMATCH[1]}
+    local minor=${BASH_REMATCH[2]}
+    local revision=${BASH_REMATCH[3]}
+    local version="$major.$minor.$revision"
+    local prefix=$(echo "$currentTag" | sed "s/$version$//")
+
+    # increase the appropriate version number
+    case $position in
+        0)
+            major=$((major + 1))
+            minor=0
+            revision=0
+            ;;
+
+        1)
+            minor=$((minor + 1))
+            revision=0
+            ;;
+
+        *)
+            revision=$((revision + 1))
+            ;;
+    esac
+
+    echo "$prefix$major.$minor.$revision"
 }
 
 # ------------

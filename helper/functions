@@ -419,11 +419,51 @@ updateVersion()
         name="friends-of-bash"
     fi
 
-    currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
-       nextTag=$(getNextTagFromGivenPath "$pathRoot")
+    local      currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
+    local    nextMajorTag=$(getNextTagFromGivenPath "$pathRoot" 0)
+    local    nextMinorTag=$(getNextTagFromGivenPath "$pathRoot" 1)
+    local nextRevisionTag=$(getNextTagFromGivenPath "$pathRoot" 2)
 
-    echo "name:      $name"
-    echo "directory: $pathRoot"
+    echo "name:            $name"
+    echo "directory:       $pathRoot"
+    echo "current version: $currentTag"
+    echo
+    echo "Which new version number you want to use? (1) - $nextMajorTag, (2) - $nextMinorTag or (3) $nextRevisionTag"
+    echo
+
+    while true; do
+        read -n 1 -p "Choose (1), (2) or (3): " choice
+        case $choice in
+            # 1
+            1)
+                local nextTag="$nextMajorTag"
+                break
+                ;;
+            # 2
+            2)
+                local nextTag="$nextMinorTag"
+                break
+                ;;
+            # 3
+            3)
+                local nextTag="$nextRevisionTag"
+                break
+                ;;
+            # escape
+            $'\e')
+                echo
+                echo
+                echo "The command was cancelled by user."
+                exit
+                ;;
+            # other character
+            *)
+                echo
+                ;;
+        esac
+    done
+
+    echo
     echo
 
     while true; do
