@@ -397,6 +397,65 @@ doUpdateAvailable()
 }
 
 # ------------
+# updateVersion method
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-06)
+# ------------
+updateVersion()
+{
+    local pathRoot="$1"
+    local name="$2"
+    local showAppName=${3:-false}
+
+    local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
+
+    if [ "$name" != "" ]; then
+        pathRoot="$friendsOfBashCollectionPoint/$name"
+
+        if [ ! -d "$pathRoot/.git" ]; then
+            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
+        fi
+    fi
+
+    currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
+       nextTag=$(getNextTagFromGivenPath "$pathRoot")
+
+    while true; do
+        read -n 1 -p "This will set the current version number $currentTag to $nextTag. Do you want to continue? Type (y)es or (no): " yn
+        case $yn in
+            # yes
+            [Yy]*)
+                break
+                ;;
+            # no
+            [Nn]*)
+                echo
+                echo "The command was cancelled by user."
+                exit
+                ;;
+            # escape
+            $'\e')
+                echo
+                echo "The command was cancelled by user."
+                exit
+                ;;
+            # other character
+            *)
+                echo
+                ;;
+        esac
+    done
+
+    local workingTreeParameter=$(getWorkingTreeParameter "$pathRoot")
+
+    echo
+    git $workingTreeParameter tag -a $nextTag -m "version $nextTag"
+    git $workingTreeParameter push origin $nextTag
+    echo "Done!"
+}
+
+# ------------
 # Shows the version number of this library.
 #
 # @author  Björn Hempel <bjoern@hempel.li>

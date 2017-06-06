@@ -95,6 +95,10 @@ case $executionType in
         updateAvailable "$pathRoot" "$executionName"
         ;;
 
+    updateVersion)
+        updateVersion "$pathRoot" "$executionName"
+        ;;
+
     # other character
     *)
         echo 'unknown execution type'
