@@ -29,7 +29,7 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 ### 1.3) Show status
 
 ```
-$ friends-of-bash status
+user$ friends-of-bash status
 
 friends-of-bash
 
