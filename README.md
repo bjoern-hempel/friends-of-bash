@@ -88,7 +88,7 @@ lrwxrwxrwx 1 root staff  62 Jun  4 20:01 apache-host-viewer -> /opt/friends-of-b
 ...
 ```
 
-You can execute this symlink `apache-host-viewer` from anywhere you want to like this:
+You can execute the above mentioned symlink `apache-host-viewer` from anywhere you want to like this:
 
 ```
 user$ apache-host-viewer --version
