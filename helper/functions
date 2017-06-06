@@ -406,7 +406,6 @@ updateVersion()
 {
     local pathRoot="$1"
     local name="$2"
-    local showAppName=${3:-false}
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
 
@@ -416,10 +415,16 @@ updateVersion()
         if [ ! -d "$pathRoot/.git" ]; then
             echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
         fi
+    else
+        name="friends-of-bash"
     fi
 
     currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
        nextTag=$(getNextTagFromGivenPath "$pathRoot")
+
+    echo "name:      $name"
+    echo "directory: $pathRoot"
+    echo
 
     while true; do
         read -n 1 -p "This will set the current version number $currentTag to $nextTag. Do you want to continue? Type (y)es or (no): " yn
