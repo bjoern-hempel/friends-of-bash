@@ -124,29 +124,31 @@ Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to
 
 ### 1.4) Update library
 
+#### 1.4.1) Individual
+
 ```
 user$ friends-of-bash update apache-host-viewer
 ```
 
-### 1.5) Update all libraries
+#### 1.4.2) All libraries
 
 ```
 user$ friends-of-bash update all
 ```
 
-### 1.6) Update version number
+### 1.5) Update version number
 
-#### 1.6.1) Increase the revision number
+#### 1.5.1) Increase the revision number
 
 ```
 user$ friends-of-bash updateVersion apache-host-viewer
 ```
 
-#### 1.6.2) Increase the minor number
+#### 1.5.2) Increase the minor number
 
 TODO
 
-#### 1.6.3) Increase the major number
+#### 1.5.3) Increase the major number
 
 TODO
 
