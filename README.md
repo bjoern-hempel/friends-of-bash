@@ -29,7 +29,7 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 ### 1.3) Show status
 
 ```
-$ friends-of-bash status
+user$ friends-of-bash status
 
 friends-of-bash
 
@@ -79,7 +79,7 @@ user$ friends-of-bash version hello-world
 hello-world/v1.0.0
 ```
 
-All installed repository you will find below the directory `/opt/friends-of-bash`. The installer will execute an install file (if exists). The install file must be located directly within the root folder of your repository. Alternatively you can create an install folder with some symlink linked to existing files within your repository. They all will be installed at `/usr/local/bin`. Go here https://github.com/bjoern-hempel/apache-host-viewer/tree/master/install to see an example that will create a symlink like this:
+All installed repositories you will find below the directory `/opt/friends-of-bash`. The installer will execute an install file (if exists). The install file must be located directly within the root folder of your repository by the name of `install`. Alternatively you can create an `install` folder with some symlinks linked to existing files within your repository. They all will be installed at `/usr/local/bin`. Go here https://github.com/bjoern-hempel/apache-host-viewer/tree/master/install to see an example that will create a symlink like this:
 
 ```
 user$ ls -l /usr/local/bin/.
@@ -88,7 +88,7 @@ lrwxrwxrwx 1 root staff  62 Jun  4 20:01 apache-host-viewer -> /opt/friends-of-b
 ...
 ```
 
-You can execute this symlink `apache-host-viewer` from anywhere you want to like this:
+You can execute the above mentioned symlink `apache-host-viewer` from anywhere you want to like this:
 
 ```
 user$ apache-host-viewer --version
