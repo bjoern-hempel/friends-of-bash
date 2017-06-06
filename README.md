@@ -134,6 +134,22 @@ user$ friends-of-bash update apache-host-viewer
 user$ friends-of-bash update all
 ```
 
+### 1.6) Update version number
+
+#### 1.6.1) Increase the revision number
+
+```
+user$ friends-of-bash updateVersion apache-host-viewer
+```
+
+#### 1.6.2) Increase the minor number
+
+TODO
+
+#### 1.6.3) Increase the major number
+
+TODO
+
 ## 3.) Usage
 
 TODO: Describe the general usage of this library here.
