@@ -200,18 +200,18 @@ status()
 {
     local pathRoot="$1"
     local     name="$2"
-    
+
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
-    
+
     if [ "${name,,}" == "all" ]; then
         for nameRepository in $(ls "$friendsOfBashCollectionPoint"); do
             local directoryRepository="$friendsOfBashCollectionPoint/$nameRepository"
-            
+
             if [ ! -d "$directoryRepository/.git" ]; then
                 continue;
             fi
-            
-            doStatus "$pathRoot" "$nameRepository"
+
+            doStatus "$pathRoot" "$nameRepository" true
         done
     else
         doStatus "$pathRoot" "$name"
@@ -228,6 +228,7 @@ doStatus()
 {
     local pathRoot="$1"
     local name="$2"
+    local short=${3:-false}
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
 
@@ -251,6 +252,20 @@ doStatus()
     local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
     local remoteVersion=$(getLastTagByGivenRepository "$gitRepository")
 
+    local repositoryVersion=$(getRepositoryVersion "$pathRoot")
+
+    if $short; then
+        echo -n "$nameRepository - $repositoryVersion"
+
+        if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
+            echo " - application is up to date"
+        else
+            echo " - new version is available ($remoteVersion)"
+        fi
+
+        return 0
+    fi
+
     echo
     echo "$nameRepository"
     printf "%${#nameRepository}s" |tr " " "-"
@@ -271,6 +286,8 @@ doStatus()
         echo "user\$ $0 update $nameRepository"
         echo
     fi
+
+    return 0
 }
 
 # ------------
