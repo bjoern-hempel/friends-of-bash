@@ -163,3 +163,41 @@ isDomainAssignedToIpCheck()
     return 1
 }
 
+isAhvCheck()
+{
+    local          ip="$1"
+    local        path="$2"
+    local credentials="$3"
+
+    local json=$(getApacheHostViewerJson "$ip" "$path" "$credentials")
+    local lastStatus=$?
+
+    case $lastStatus in
+        1)
+            outputContent "ahv.status.overall" "failed" "The url is unprotected."
+            return 1
+            ;;
+
+        2)
+            outputContent "ahv.status.overall" "failed" "The given credentials are wrong."
+            return 1
+            ;;
+
+        3)
+            outputContent "ahv.status.overall" "failed" "The url is protected (but no credentials are given)."
+            return 1
+            ;;
+    esac
+
+    local    status=$(echo "$json" | jq -M -r '.status.overall')
+    local updatedAt=$(echo "$json" | jq -M -r '.["created-at"]')
+
+    if [ "$status" != "error" ]; then
+        outputContent "ahv.status.overall" "passed" "The status from apache host viewer has passed ($status)."
+        return 0
+    fi
+
+    outputContent "ahv.status.overall" "failed" "The status from apache host viewer has not passed ($status)."
+    return 1
+}
+
