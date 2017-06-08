@@ -4,13 +4,70 @@
 # Compress given json string.
 #
 # @author  Björn Hempel
-# @version 1.0 (2017-05-14)
+# @version 1.0 (2017-06-09)
 # ------------
 compressJson()
 {
     local json="$1"
 
     echo -n "$json" | sed 's/^[ \t]*//' | sed ':a;N;$!ba;s/\n//g' | sed 's/:[ ]\+"/:"/g' | sed 's/:[ ]\+\[/:\[/g' | sed 's/:[ ]\+{/:{/g'
+}
+
+# ------------
+# Tries to get the apache host viewer server json.
+#
+# Return codes:
+# ---
+# return 0: The json is returned
+# return 1: The url is unprotected
+# return 2: The given credentials are wrong
+# return 3: The url is protected (but no credentials are given)
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-06-09)
+# ------------
+getApacheHostViewerJson()
+{
+    local   ip="$1"
+    local path="$2"
+    local cred="$3"
+
+    # get final url
+    local url=$(getRedirectUrl "http://$ip/$path")
+    local  sc=0
+    local  sv=''
+
+    # get status code
+    read sc sv < <(getHttpStatusCodeFromUrl "$url")
+
+    # credentials are given
+    if [ "$cred" != "" ]; then
+        # last status code 401 exptected
+        if [ $sc -ne 401 ]; then
+            return 1
+        fi
+
+        # build url with credentials
+        url=$(buildUrl "$url" "" "$cred")
+
+        # and get new status code
+        read sc sv < <(getHttpStatusCodeFromUrl "$url")
+
+        # status code 200 expected
+        if [ $sc -ne 200 ]; then
+            return 2
+        fi
+
+    # no credentials given
+    else
+        # status code 200 expected
+        if [ $sc -ne 200 ]; then
+            return 3
+        fi
+    fi
+
+    echo "$sv"
+    return 0
 }
 
 

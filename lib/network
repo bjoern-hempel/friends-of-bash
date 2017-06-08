@@ -12,6 +12,41 @@ getIpAddressFromUrl()
 }
 
 # ------------
+# Gets the final url, if given url redirects.
+# Otherwise it will return the given address.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-06-08)
+# ------------
+getRedirectUrl()
+{
+    local url="$1"
+    local  sc=0
+    local  sv=""
+
+    while true; do
+        read sc sv < <(getHttpStatusCodeFromUrl "$url")
+
+        local redirect=false
+
+        ! $redirect && [ $sc -eq 300 ] && redirect=true
+        ! $redirect && [ $sc -eq 301 ] && redirect=true
+        ! $redirect && [ $sc -eq 302 ] && redirect=true
+        ! $redirect && [ $sc -eq 303 ] && redirect=true
+        ! $redirect && [ $sc -eq 307 ] && redirect=true
+        ! $redirect && [ $sc -eq 308 ] && redirect=true
+
+        # no redirection found → break
+        ! $redirect && break
+
+        # save new url and try again → while true
+        url="$sv"
+    done
+
+    echo "$url"
+}
+
+# ------------
 # Get the status code from given url.
 #
 # @author  Björn Hempel
@@ -99,8 +134,7 @@ getHeaderFromUrl()
 # Checks if the given port on given ip is open.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
-# @version 1.0
-# @date    2017-02-26
+# @version 1.0 (2017-02-26)
 # ------------
 isPortOpen()
 {
