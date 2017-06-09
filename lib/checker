@@ -165,6 +165,12 @@ isDomainAssignedToIpCheck()
 
 isAhvCheck()
 {
+    # check that the application jq exists
+    if ! applicationExists "jq"; then
+        outputContent "ahv.status.overall" "failed" "The application jq is not installed. Please install with: user$ sudo apt install jq"
+        return 1
+    fi
+
     local          ip="$1"
     local        path="$2"
     local credentials="$3"
