@@ -254,13 +254,23 @@ doStatus()
 
     local repositoryVersion=$(getRepositoryVersion "$pathRoot")
 
+    local   numberChangedFiles=$(getNumberChangedFiles "$pathRoot")
+    local numberUntrackedFiles=$(getNumberUntrackedFiles "$pathRoot")
+    local  numberAffectedFiles=$((numberChangedFiles + numberUntrackedFiles))
+
+    local changedFilesText=""
+
+    if [ $numberAffectedFiles -gt 0 ]; then
+        changedFilesText=" (Attention: $numberAffectedFiles changed files found!)"
+    fi
+
     if $short; then
         echo -n "$nameRepository - $repositoryVersion"
 
         if [ "$localHash" == "$remoteHash" ] && [ "$localVersion" == "$remoteVersion" ]; then
-            echo " - application is up to date"
+            echo " - application is up to date$changedFilesText"
         else
-            echo " - new version is available ($remoteVersion)"
+            echo " - new version is available ($remoteVersion)$changedFilesText"
         fi
 
         return 0
@@ -268,7 +278,7 @@ doStatus()
 
     echo
     echo "$nameRepository"
-    printf "%${#nameRepository}s" |tr " " "-"
+    printf "%${#nameRepository}s" | tr " " "-"
     echo
     echo
     echo "Currently installed version:   $localVersion"
@@ -284,6 +294,13 @@ doStatus()
     else
         echo "Your \"$pathRoot\" version is not up to date. Please update with:"
         echo "user\$ $0 update $nameRepository"
+        echo
+    fi
+
+    if [ $numberAffectedFiles -gt 0 ]; then
+        echo "ATTENTION!"
+        echo
+        echo "You have $numberAffectedFiles changed file(s) within the folder \"$pathRoot\"."
         echo
     fi
 

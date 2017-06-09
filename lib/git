@@ -350,3 +350,45 @@ getRepositoryValues()
     return 0
 }
 
+# ------------
+# Gets the number of changed files.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-09)
+# ------------
+getNumberChangedFiles()
+{
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
+
+    local changedFiles=$(git $workingTreeParameter diff --name-only | wc -l)
+
+    echo "$changedFiles"
+}
+
+# ------------
+# Gets the number of untracked files.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-09)
+# ------------
+getNumberUntrackedFiles()
+{
+    local gitDir="$1"
+
+    if [ "$gitDir" == "" ]; then
+        gitDir=$(pwd)
+    fi
+
+    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
+
+    local untrackedFiles=$(git $workingTreeParameter ls-files --others --exclude-standard | wc -l)
+
+    echo "$untrackedFiles"
+}
+
