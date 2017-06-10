@@ -94,13 +94,11 @@ getCurrentTagFromGivenPath()
 {
     local gitDir="$1"
 
-    if [ "$gitDir" == "" ]; then
-        gitDir=$(pwd)
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
     fi
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
-
-    local tagName=$(git $workingTreeParameter describe 2>/dev/null | xargs | sed 's~-[0-9]\+-[A-Za-z0-9]\+$~~')
+    local tagName=$(git describe 2>/dev/null | xargs | sed 's~-[0-9]\+-[A-Za-z0-9]\+$~~')
 
     if [ "$tagName" == "" ]; then
         echo "v0.0.0"
@@ -212,13 +210,11 @@ getCurrentChangesetFromGivenPath()
 {
     local gitDir="$1"
 
-    if [ "$gitDir" == "" ]; then
-        gitDir=$(pwd)
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
     fi
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
-
-    git $workingTreeParameter rev-parse HEAD | xargs
+    git rev-parse HEAD | xargs
 }
 
 # ------------
@@ -231,13 +227,11 @@ getCurrentBranchFromGivenPath()
 {
     local gitDir="$1"
 
-    if [ "$gitDir" == "" ]; then
-        gitDir=$(pwd)
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
     fi
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
-
-    git $workingTreeParameter branch | grep "^\*" | sed 's/^\* //'
+    git branch | grep "^\*" | sed 's/^\* //'
 }
 
 # ------------
@@ -360,13 +354,11 @@ getNumberChangedFiles()
 {
     local gitDir="$1"
 
-    if [ "$gitDir" == "" ]; then
-        gitDir=$(pwd)
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
     fi
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
-
-    local changedFiles=$(git $workingTreeParameter diff --name-only | wc -l)
+    local changedFiles=$(git diff --name-only | wc -l)
 
     echo "$changedFiles"
 }
@@ -381,14 +373,48 @@ getNumberUntrackedFiles()
 {
     local gitDir="$1"
 
-    if [ "$gitDir" == "" ]; then
-        gitDir=$(pwd)
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
     fi
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$gitDir")
-
-    local untrackedFiles=$(git $workingTreeParameter ls-files --others --exclude-standard | wc -l)
+    local untrackedFiles=$(git ls-files --others --exclude-standard | wc -l)
 
     echo "$untrackedFiles"
+}
+
+# ------------
+# Do a git pull to the given path.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-10)
+# ------------
+getPull()
+{
+    local gitDir="$1"
+
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
+    fi
+
+    git pull
+}
+
+# ------------
+# Update and push given tag to given git repository.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-10)
+# ------------
+getSetAndPushTag()
+{
+    local nextTag="$1"
+    local gitDir="$2"
+
+    if [ "$gitDir" != "" ] && [ -d "$gitDir" ]; then
+        cd "$gitDir"
+    fi
+
+    git tag -a $nextTag -m "version $nextTag"
+    git push origin $nextTag
 }
 
