@@ -175,7 +175,7 @@ isAhvCheck()
     local        path="$2"
     local credentials="$3"
 
-    local json=$(getApacheHostViewerJson "$ip" "$path" "$credentials")
+    local json="" && json=$(getApacheHostViewerJson "$ip" "$path" "$credentials")
     local lastStatus=$?
 
     case $lastStatus in
