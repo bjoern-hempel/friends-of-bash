@@ -184,10 +184,8 @@ doUpdate()
         esac
     done
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$pathRoot")
-
     echo
-    git $workingTreeParameter pull
+    local result=$(getPull "$pathRoot")
 }
 
 # ------------
@@ -526,11 +524,9 @@ updateVersion()
         esac
     done
 
-    local workingTreeParameter=$(getWorkingTreeParameter "$pathRoot")
-
+    # set and push new tag
     echo
-    git $workingTreeParameter tag -a $nextTag -m "version $nextTag"
-    git $workingTreeParameter push origin $nextTag
+    $(getSetAndPushTag "$nextTag" "$pathRoot")
     echo "Done!"
 }
 
