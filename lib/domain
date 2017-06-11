@@ -70,3 +70,15 @@ getUrlAndPorts()
 
     echo "$url" "$ports"
 }
+
+# --------
+# Sort the given domain list and remove duplicates.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-12)
+# --------
+sortDomainList()
+{
+    echo "$1" | sort -u | sed 's~\(http[s]*://\)~\1 ~' | sort -k2 | sed 's~:// ~://~'
+}
+
