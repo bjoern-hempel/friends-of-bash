@@ -158,31 +158,33 @@ doUpdate()
         return 0
     fi
 
-    while true; do
-        read -n 1 -p "Do you really want to update the current version \"$localVersion\" from \"$pathRoot\" to \"$remoteVersion\"? Type (y)es or (no): " yn
-        case $yn in
-            # yes
-            [Yy]*)
-                break
-                ;;
-            # no
-            [Nn]*)
-                echo
-                echo "The update was cancelled by user."
-                return 1
-                ;;
-            # escape
-            $'\e')
-                echo
-                echo "The update was cancelled by user."
-                return 1
-                ;;
-            # other character
-            *)
-                echo
-                ;;
-        esac
-    done
+    if ! $FORCE_UPDATE; then
+        while true; do
+            read -n 1 -p "Do you really want to update the current version \"$localVersion\" from \"$pathRoot\" to \"$remoteVersion\"? Type (y)es or (no): " yn
+            case $yn in
+                # yes
+                [Yy]*)
+                    break
+                    ;;
+                # no
+                [Nn]*)
+                    echo
+                    echo "The update was cancelled by user."
+                    return 1
+                    ;;
+                # escape
+                $'\e')
+                    echo
+                    echo "The update was cancelled by user."
+                    return 1
+                    ;;
+                # other character
+                *)
+                    echo
+                    ;;
+            esac
+        done
+    fi
 
     echo
     local result=$(getPull "$pathRoot")

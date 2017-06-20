@@ -5,6 +5,9 @@ if [ -z $executionType ]; then
     executionType="install"
 fi
 
+# initial values
+FORCE_UPDATE=false
+
 # declare parameter list array
 PARAMETERS=()
 
@@ -13,6 +16,12 @@ PARAMETERS=()
 # help: Usage: %scriptname% [options...] {install|status|update|version|list|updateAvailable}
 while [[ $# > 0 ]]; do
     case "$1" in
+        # help:  -y,    --yes                     Auto yes. Don't answer to update questions.
+        # help:
+        -y|--yes)
+            FORCE_UPDATE=true
+            ;;
+
         # help:  -h,    --help                    Shows this help.
         # help:
         -h|--help)
