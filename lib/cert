@@ -60,16 +60,74 @@ isCertificateVerified()
     local certificateFile="$1"
     local chainFile="$2"
     local domain="$3"
+    local printStatus=${4:-false}
     local domainUnderlined=$(getUnderlinedString "$domain")
     local status=$(openssl verify -CAfile "$chainFile" "$certificateFile" | grep ": OK")
 
     if [ "$status" != "" ]; then
-        outputContent "certificates.${domainUnderlined}.verified" "passed" "The certificate from the domain \"$domain\" was successfully verified."
+        if $printStatus; then
+            outputContent \
+                "certificates.${domainUnderlined}.verified" \
+                "passed" \
+                "The certificate from the domain \"$domain\" was successfully verified."
+        fi
         return 0
     fi
 
-    outputContent "certificates.${domainUnderlined}.verified" "failed" "The certificate from the domain \"$domain\" was not successfully verified."
+    if $printStatus; then
+        outputContent \
+            "certificates.${domainUnderlined}.verified" \
+            "failed" \
+            "The certificate from the domain \"$domain\" was not successfully verified."
+    fi
     return 1
+}
+
+# ------------
+# Returns the number of valid days of given certificate.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-06-12)
+# ------------
+getCertificateValidDays()
+{
+    local certificateFile="$1"
+
+    # check certificate date
+    local         currentTimestamp=$(getCurrentTimestamp)
+    local      validUntilTimestamp=$(getValidUntilFromCertificate "$certificateFile" true)
+    local     differenceValidUntil=$((validUntilTimestamp-currentTimestamp))
+    local differenceValidUntilDays=$((differenceValidUntil/60/60/24))
+
+    echo "$differenceValidUntilDays"
+}
+
+# ------------
+# Returns the status of valid days of given certificate.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-06-12)
+# ------------
+getCertificateValidStatus()
+{
+    local certificateFile="$1"
+    local    criticalDays=${2:-7}
+    local     warningDays=${3:-14}
+
+    local certificateValidDays=$(getCertificateValidDays "$certificateFile")
+
+    if [ $certificateValidDays -le $criticalDays ]; then
+        echo 'critical'
+        return 2
+    fi
+
+    if [ $certificateValidDays -le $warningDays ]; then
+        echo 'warn'
+        return 1
+    fi
+
+    echo 'ok'
+    return 0
 }
 
 # ------------
@@ -83,6 +141,7 @@ isCertificateValid()
     local certificateFile="$1"
     local domain="$2"
     local warningDays="${3:-14}"
+    local printStatus=${4:-false}
     local domainUnderlined=$(getUnderlinedString "$domain")
 
     # check certificate date
@@ -95,18 +154,33 @@ isCertificateValid()
 
     # certificate is valid more than $warningDays days
     if [ $differenceValidUntilDays -gt $warningDays ]; then
-        outputContent "certificates.${domainUnderlined}.valid" "passed" "The certificate from the domain \"$domain\" is valid until \"$COLOR_GREEN$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+        if $printStatus; then
+            outputContent \
+                "certificates.${domainUnderlined}.valid" \
+                "passed" \
+                "The certificate from the domain \"$domain\" is valid until \"$COLOR_GREEN$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+        fi
         return 0
     fi
 
     # certificate is valid less then $warningDays days
     if [ $differenceValidUntilDays -gt 0 ]; then
-        outputContent "certificates.${domainUnderlined}.valid" "warning" "The certificate from the domain \"$domain\" is only valid until \"$COLOR_YELLOW$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+        if $printStatus; then
+            outputContent \
+                "certificates.${domainUnderlined}.valid" \
+                "warning" \
+                "The certificate from the domain \"$domain\" is only valid until \"$COLOR_YELLOW$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+        fi
         return 0;
     fi
 
     # certificate is expired.
-    outputContent "certificates.${domainUnderlined}.valid" "failed" "The certificate from the domain \"$domain\" is not invalid. Expired at \"$COLOR_RED$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+    if $printStatus; then
+        outputContent \
+            "certificates.${domainUnderlined}.valid" \
+            "failed" \
+            "The certificate from the domain \"$domain\" is not invalid. Expired at \"$COLOR_RED$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+    fi
     return 1
 }
 
@@ -114,23 +188,34 @@ isCertificateValid()
 # Verifies the given chain certificate.
 #
 # @author  Björn Hempel
-# @version 1.0
+# @version 1.0 (2017-06-12)
 # ------------
 isChainCertificateVerified()
 {
     local chainFile="$1"
     local issuer="$2"
     local domain="$3"
+    local printStatus=${4:-false}
     local domainUnderlined=$(getUnderlinedString "$domain")   
 
     local status=$(openssl verify "$chainFile" | grep ": OK")
 
     if [ "$status" != "" ]; then
-        outputContent "certificates.${domainUnderlined}.chain" "passed" "The chainfile from the issuer\n\"$issuer\"\nwas successfully verified."
+        if $printStatus; then
+            outputContent \
+                "certificates.${domainUnderlined}.chain" \
+                "passed" \
+                "The chainfile from the issuer\n\"$issuer\"\nwas successfully verified."
+        fi
         return 0;
     fi
 
-    outputContent "certificates.${domainUnderlined}.chain" "failed" "The chainfile from the issuer\n\"$issuer\"\nwas not successfully verified."
+    if $printStatus; then
+        outputContent \
+            "certificates.${domainUnderlined}.chain" \
+            "failed" \
+            "The chainfile from the issuer\n\"$issuer\"\nwas not successfully verified."
+    fi
     return 1
 }
 
@@ -158,6 +243,7 @@ isStatusOcspOk()
     local domain="$1"
     local chainfile="$2"
     local certFile="$3"
+    local printStatus=${4:-false}
     local ocspUri=$(getOcspUri "$domain")
     local ocspHostname=$(getHostnameFromUrl $ocspUri)
     local domainUnderlined=$(getUnderlinedString "$domain")
@@ -167,11 +253,21 @@ isStatusOcspOk()
     status=$(echo "$status" | grep "Response verify OK")
 
     if [ "$status" != "" ]; then
-        outputContent "certificates.${domainUnderlined}.ocsp" "passed" "The ocsp is activated on domain \"$domain\" (\"$ocspUri\")."
+        if $printStatus; then
+            outputContent \
+                "certificates.${domainUnderlined}.ocsp" \
+                "passed" \
+                "The ocsp is activated on domain \"$domain\" (\"$ocspUri\")."
+        fi
         return 0
     fi
 
-    outputContent "certificates.${domainUnderlined}.ocsp" "failed" "The ocsp is not activated on domain \"$domain\" (\"$ocspUri\")."
+    if $printStatus; then
+        outputContent \
+            "certificates.${domainUnderlined}.ocsp" \
+            "failed" \
+            "The ocsp is not activated on domain \"$domain\" (\"$ocspUri\")."
+    fi
     return 1
 }
 
@@ -219,6 +315,30 @@ getDomainFromCertificate()
 }
 
 # ------------
+# Get the domain names from given certificate file
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-13)
+# ------------
+getDomainsFromCertificate()
+{
+    local certificateFile="$1"
+
+    local certificates=$(openssl x509 -noout -text -in "$certificateFile" | awk '/X509v3 Subject Alternative Name/ {getline;gsub(/ /, "", $0); print}' | tr -d "DNS:")
+    local certificate=""
+
+    certificate=$(getDomainFromCertificate "$certificateFile")
+
+    if [ "$certificate" != "" ]; then
+        certificates=$(echo "$certificates,$certificate")
+    fi
+
+    certificates=$(echo "$certificates" | tr ',' "\n" | sort -u)
+
+    echo "$certificates"
+}
+
+# ------------
 # Checks if the given domain matches with the certificate file
 #
 # @author  Björn Hempel <bjoern@hempel.li>
@@ -228,16 +348,30 @@ isDomainFromCertificate()
 {
     local domain="$1"
     local certificateFile="$2"
+    local printStatus=${3:-false}
     local domainUnderlined=$(getUnderlinedString "$domain")
 
-    local domainCertificate=$(getDomainFromCertificate "$certificateFile")
+    local domainsCertificate=$(getDomainsFromCertificate "$certificateFile")
 
-    if [ "$domain" == "$domainCertificate" ]; then
-        outputContent "certificates.${domainUnderlined}.domainName" "passed" "The domain \"$domain\" validate the domain name in certificate file."
-        return 0
+    IFS=$'\n'
+    for domainCertificate in $domainsCertificate; do
+        if [ "$domain" == "$domainCertificate" ]; then
+            if $printStatus; then
+                outputContent \
+                    "certificates.${domainUnderlined}.domainName" \
+                    "passed" \
+                    "The domain \"$domain\" validate the domain name in certificate file."
+            fi
+            return 0
+        fi
+    done
+
+    if $printStatus; then
+        outputContent \
+            "certificates.${domainUnderlined}.domainName" \
+            "failed" \
+            "The domain \"$domain\" differs from the domain name in certificate file (\"$certificateFile\" returns \"$domainCertificate\")."
     fi
-
-    outputContent "certificates.${domainUnderlined}.domainName" "failed" "The domain \"$domain\" differs from the domain name in certificate file (\"$certificateFile\" returns \"$domainCertificate\")."
     return 1
 }
 
