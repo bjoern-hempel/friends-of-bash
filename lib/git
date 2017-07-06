@@ -21,21 +21,21 @@ getWorkingTreeParameter()
 # @version 1.0 (2017-05-21)
 # ------------
 normalizeTagResult()
-{   
+{
     local tagResult="$1"
     local filter="$2"
-    
+
     local normalizedTagResult=$(echo "$tagResult" | \
         awk '{print $2}' | \
         cut -d '/' -f 3 | \
         cut -d '^' -f 1  | \
         uniq)
-    
+
     # filter the result
     if [ "$filter" != "" ]; then
         normalizedTagResult=$(echo "$normalizedTagResult" | grep "\-$filter" --color=never)
     fi
-    
+
     echo "$normalizedTagResult"
 }
 
@@ -243,6 +243,7 @@ getCurrentBranchFromGivenPath()
 getRepositoryVersion()
 {
     local pathRoot="$1"
+    local short=${2:-false}
 
     eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
     [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
@@ -253,7 +254,11 @@ getRepositoryVersion()
     local localHash=$(getCurrentChangesetFromGivenPath "$pathRoot")
     local localVersion=$(getCurrentTagFromGivenPath "$pathRoot")
 
-    echo "$nameRepository/$localVersion"
+    if $short; then
+        echo "$localVersion"
+    else
+        echo "$nameRepository/$localVersion"
+    fi
 }
 
 # ------------
