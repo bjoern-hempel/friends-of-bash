@@ -121,6 +121,86 @@ getTargetFromVirtualHost()
 }
 
 # ------------
+# Returns the server name from given virtual host.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-07-06)
+# ------------
+getServerNameFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local virtualHost="$1"
+    local servernameName="servername"
+
+    local servername=$(echo "$virtualHost" | grep -i "servername")
+
+    if [ "$servername" == "" ]; then
+        return 1
+    fi
+
+    echo "$servername" | awk '{ print $2 }'
+    return 0
+}
+
+# ------------
+# Tries to get the server name from given project path.
+# ATTENTION: This function needs root rights! Otherwise the required application apachectl won't be found.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-07-06)
+# ------------
+getServerNameFromProjectPath()
+{
+    local projectPath="$1"
+
+    # check project path
+    if [ ! -d "$projectPath" ]; then
+        echo "The given project path \"$projectPath\" was not found."
+        return 1
+    fi
+
+    local lines=$(apachectl -S | grep "namevhost")
+    local serverRoot=$(apachectl -S | grep ServerRoot | awk '{print $2}' | sed -e 's/\"//g')
+
+    # split lines from apachectl config output
+    local lineArray=()
+    while read -r line; do
+        lineArray+=("$line")
+    done <<< "$lines"
+
+    # iterate through the returned virtual hosts configs from apachectl
+    loopCounter=0
+    for line in "${lineArray[@]}"; do
+        local   port=$(echo "$line" | awk '{print $2}')
+        local domain=$(echo "$line" | awk '{print $4}')
+        local config=$(echo "$line" | awk '{print $5}')
+
+        local     path=$(shopt -s nocasematch && [[ "$config" =~ \(([./a-z0-9\-]+) ]] && echo "${BASH_REMATCH[1]}")
+        local lineFrom=$(shopt -s nocasematch && [[ "$config" =~ :([0-9]+)\) ]] && echo "${BASH_REMATCH[1]}")
+
+        local virtualHost=$(getVirtualHost "$path" $lineFrom "/etc/apache2" "$DOCKER_NAME")
+        local   targetUri=$(getTargetFromVirtualHost "$virtualHost")
+        local  lastStatus=$?
+
+        if [[ "$targetUri" =~ ^file://(.+) ]]; then
+            targetUri="${BASH_REMATCH[1]}"
+
+            if [ "$targetUri" == "$projectPath" ]; then
+                servername=$(getServerNameFromVirtualHost "$virtualHost")
+                lastStatus=$?
+
+                echo -n "$servername"
+                return 0
+            fi
+        fi
+    done
+
+    echo -n ""
+    return 0
+}
+
+# ------------
 # Tries to get the name from the project.
 #
 # @author  Björn Hempel <bjoern@hempel.li>
