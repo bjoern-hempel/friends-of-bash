@@ -5,6 +5,10 @@ if [ -z $executionType ]; then
     executionType="install"
 fi
 
+# author settings
+AUTHOR="Björn Hempel"
+EMAIL="bjoern@hempel.li"
+
 # initial values
 FORCE_UPDATE=false
 
@@ -12,6 +16,8 @@ FORCE_UPDATE=false
 PARAMETERS=()
 
 # read arguments
+# help:
+# help: "friends of bash": A bash function library (%version%) by %author% <%email%>.
 # help:
 # help: Usage: %scriptname% [options...] {install|status|update|version|list|updateAvailable}
 while [[ $# > 0 ]]; do
@@ -25,7 +31,12 @@ while [[ $# > 0 ]]; do
         # help:  -h,    --help                    Shows this help.
         # help:
         -h|--help)
-            cat "$BASH_SOURCE" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | sed "s~%scriptname%~$scriptname~g"
+            version=$(getRepositoryVersion "$pathRoot" true)
+            cat "$BASH_SOURCE" | grep "# help:" | grep -v 'cat parameter' | sed 's/[ ]*# help:[ ]\?//g' | \
+                sed "s~%scriptname%~$scriptname~g" | \
+                sed "s~%version%~$version~g" | \
+                sed "s~%author%~$AUTHOR~g" | \
+                sed "s~%email%~$EMAIL~g"
             exit 0
             ;;
 
