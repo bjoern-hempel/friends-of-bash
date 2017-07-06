@@ -15,7 +15,7 @@ BASH_LIB_VERSION="1.0"
 # @author  Björn Hempel
 # @version 1.0 (2017-05-21)
 # ------------
-compareVersions ()
+compareVersions()
 {
     # remove unallowed signes
     local version1=$(echo "$1" | sed 's/[^0-9.]//ig')
@@ -53,6 +53,71 @@ compareVersions ()
     done
 
     # normally this should not be happened
+    return 0
+}
+
+# ------------
+# Compares the app versions from given .require file with the current app versions from system.
+#
+# Returns 0 if the comparisons are passed.
+# Returns 1 if at least one version number is not passed.
+# Returns 2 if at least one app is currently not installed.
+# Returns 3 if the given .require path does not exist.
+# Returns 4 while catching another error.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-07-06)
+# ------------
+checkCurrentVersionNumbers()
+{
+    local requirePath="$1"
+
+    # check require path
+    if [ ! -f "$requirePath" ]; then
+        echo "The given .require file \"$requirePath\" was not found."
+        return 3
+    fi
+
+    IFS=$'\n' read -r -d '' -a requiredApps < <(jq -r 'keys[]' "$requirePath")
+
+    for requiredApp in "${requiredApps[@]}"; do
+        if ! applicationExists "$requiredApp"; then
+            echo "Application \"$requiredApp\" is not installed. Please install it before continuing."
+            return 2
+        fi
+
+        # get current and needed version number
+        local versionCurrent=$($requiredApp --version | sed 's~^[^/]\+/~~gi' | sed 's/[^0-9.]//ig')
+        local versionRequieredApp=$(jq -r '."'$requiredApp'"' "$pathRoot/.require")
+
+        # extract compare parameter from needed version number
+        local compare='>='
+        if [[ "$versionRequieredApp" =~ ^([^0-9]+)(.+) ]]; then
+            compare="${BASH_REMATCH[1]}"
+            versionRequieredApp="${BASH_REMATCH[2]}"
+        fi
+
+        # compare the current and needed version number.
+        $(compareVersions "$versionCurrent" "$versionRequieredApp")
+        local lastStatus=$?
+
+        case $compare in
+            ">=")
+                if [ $lastStatus -eq 2 ]; then
+                    echo -n "At least version \"$versionRequieredApp\" from application \"$requiredApp\" is required. "
+                    echo -n "Application \"$requiredApp\" currently has version \"$versionCurrent\". "
+                    echo    "Please update before continuing."
+                    return 1
+                fi
+                ;;
+
+            *)
+                echo "Unknown compare status \"$compare\"."
+                return 4
+                ;;
+        esac
+    done
+
     return 0
 }
 
