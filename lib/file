@@ -7,43 +7,43 @@
 # @version 1.0
 # ------------
 cfgParser()
-{ 
-  # read the given file
-  # print the content with:
-  # $ echo "${config[*]}"
-  config="$(<$1)" # read the file
+{
+    # read the given file
+    # print the content with:
+    # $ echo "${config[*]}"
+    config="$(<$1)" # read the file
 
-  # read the config prefix
-  configPrefix="${2:-conf}"
+    # read the config prefix
+    configPrefix="${2:-conf}"
 
-  # replace 'xyz {' into 'conf.xyz () {' and remove commented lines
-  config=$(echo "${config[*]}" | sed '/^#/d' | sed -r 's/([a-zA-Z0-9/\-]+)[ ]*\{/'$configPrefix'.\1 \(\) {/g')
+    # replace 'xyz {' into 'conf.xyz () {' and remove commented lines
+    config=$(echo "${config[*]}" | sed '/^#/d' | sed -r 's/([a-zA-Z0-9/\-]+)[ ]*\{/'$configPrefix'.\1 \(\) {/g')
 
-  # collect function names
-  regex="($configPrefix.([a-zA-Z0-9/\-]+))[ ]*\(\)[ ]*\{"
-  functionNames=""
-  confNames=""
-  while read -r configLine; do
-    if [[ "$configLine" =~ $regex ]] ; then
-      if [ "$functionNames" != "" ]; then
-        functionNames="$functionNames "
-        confNames="$confNames "
-      fi
-      functionNames="$functionNames${BASH_REMATCH[1]}"
-      confNames="$confNames${BASH_REMATCH[2]}"
-    fi 
-  done <<< "${config[*]}"
+    # collect function names
+    regex="($configPrefix.([a-zA-Z0-9/\-]+))[ ]*\(\)[ ]*\{"
+    functionNames=""
+    confNames=""
+    while read -r configLine; do
+        if [[ "$configLine" =~ $regex ]] ; then
+            if [ "$functionNames" != "" ]; then
+                functionNames="$functionNames "
+                confNames="$confNames "
+            fi
+            functionNames="$functionNames${BASH_REMATCH[1]}"
+            confNames="$confNames${BASH_REMATCH[2]}"
+        fi
+    done <<< "${config[*]}"
 
-  # add variable with function names
-  config+=($'\n')
-  config+=($'\n'$configPrefix'Functions=('$functionNames')')
-  config+=($'\n'$configPrefix's=('$confNames')')
+    # add variable with function names
+    config+=($'\n')
+    config+=($'\n'$configPrefix'Functions=('$functionNames')')
+    config+=($'\n'$configPrefix's=('$confNames')')
 
-  # eval the result
-  # print the result with
-  # $ echo "${config[*]}"
-  #echo "${config[*]}"
-  eval "$(echo "${config[*]}")"
+    # eval the result
+    # print the result with
+    # $ echo "${config[*]}"
+    #echo "${config[*]}"
+    eval "$(echo "${config[*]}")"
 }
 
 # ------------
@@ -217,5 +217,68 @@ executeScript()
     if [ -f "$script" ]; then
         source "$script"
     fi
+}
+
+# ------------
+# Returns the content from a given file from line $lineFrom to the first match
+# string $matchString or until the end of the file.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getContentFromLineToMatch()
+{
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString="$3"
+    local  dockerName="$4"
+
+    # check if file exists
+    if ! fileExistsLocallyOrOnDocker "$file" "$dockerName"; then
+        echo -n "" && return 1
+    fi
+
+    # helper variables
+    local         lines=0
+    local         found=false
+    local    serverRoot='/etc/apache2'
+    local possibleLines=$(executeLocallyOrOnDocker "cat \"$file\" | tail -n+$lineFrom" "$dockerName")
+
+    possibleLines=$(echo "$possibleLines" | wc -l)
+
+    # try to catch the comment as well
+    while [ $lineFrom -gt 1 ]; do
+        local currentLine=$(tail -n+$((lineFrom-1)) "$file" | head -n1)
+
+        # we want this line (empty lines or commented out lines)
+        if [[ "$currentLine" =~ ^([[:space:]])*$ ]] || [[ "$currentLine" =~ ^([[:space:]])*# ]]; then
+            ((lineFrom--))
+            ((lines++))
+            ((possibleLines++))
+        else
+            break;
+        fi
+    done
+
+    # try to find the end tag of VirtualHost (</VirtualHost>)
+    if [ $possibleLines -gt 0 ]; then
+        while ! $found; do
+            ((lines++))
+
+            if [ "$dockerName" != "" ]; then
+                local content=$(docker exec -it $dockerName cat "$file" | tail -n+$lineFrom | head -n$lines)
+            else
+                local content=$(tail -n+$lineFrom "$file" | head -n$lines)
+            fi
+
+            # $matchString found -> stop here
+            [[ "$content" =~ "$matchString" ]] && found=true
+
+            # end of file reached
+            [ $lines -ge $possibleLines ] && found=true
+        done
+    fi
+
+    echo "$content" && return 0
 }
 

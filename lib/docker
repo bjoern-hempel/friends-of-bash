@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 # ------------
 # Get container status
 #
@@ -22,8 +20,6 @@ getDockerContainerStatus ()
 
     echo "$statusContainer"
 }
-
-
 
 # ------------
 # Get container id
@@ -47,8 +43,6 @@ getDockerContainerId ()
     echo "$id"
 }
 
-
-
 # ------------
 # Get container name
 #
@@ -68,8 +62,6 @@ getDockerContainerName ()
 
     echo "${name/\//}"
 }
-
-
 
 # ------------
 # Get container ip
@@ -91,15 +83,13 @@ getDockerContainerIp ()
     echo $ip
 }
 
-
-
 # ------------
 # Get container created at
 #
 # @author  Björn Hempel
 # @version 1.0
 # @date    2017-02-05
-# ------------ 
+# ------------
 getDockerContainerCreatedAt ()
 {
     local containerName="$1"
@@ -116,15 +106,13 @@ getDockerContainerCreatedAt ()
     echo $createdAt
 }
 
-
-
 # ------------
 # Get docker started at
-#      
+#
 # @author  Björn Hempel
 # @version 1.0
 # @date    2017-02-05
-# ------------ 
+# ------------
 getDockerContainerStartedAt ()
 {
     local containerName="$1"
@@ -141,15 +129,13 @@ getDockerContainerStartedAt ()
     echo $startedAt
 }
 
-
-
 # ------------
 # Get docker start script
-#      
+#
 # @author  Björn Hempel
 # @version 1.0
 # @date    2017-02-05
-# ------------ 
+# ------------
 getDockerContainerStartScript ()
 {
     local containerName="$1"
@@ -162,8 +148,6 @@ getDockerContainerStartScript ()
 
     echo $startScript
 }
-
-
 
 # ------------
 # Get docker ports
@@ -185,7 +169,7 @@ getDockerContainerStartScript ()
 # @author  Björn Hempel
 # @version 1.0
 # @date    2017-02-05
-# ------------ 
+# ------------
 getDockerContainerPorts ()
 {
     local containerName="$1"
@@ -194,8 +178,6 @@ getDockerContainerPorts ()
 
     echo -en "$ports"
 }
-
-
 
 # ------------
 # Get docker volume mounts
@@ -212,8 +194,6 @@ getDockerContainerVolumes ()
 
     echo -en "${volumes//:/ }"
 }
-
-
 
 # ------------
 # Formats the status code
@@ -264,9 +244,6 @@ formatStatus()
 
     echo -n "$statusContainer"
 }
-
-
-
 
 # ------------
 # Returns the container status
@@ -403,8 +380,6 @@ getDockerContainerInfo ()
     echo -en "$output"
 }
 
-
-
 # ------------
 # Check if docker image exists
 #
@@ -423,8 +398,6 @@ dockerImageExists ()
     return 1
 }
 
-
-
 # ------------
 # Check if docker container is running
 #
@@ -434,14 +407,12 @@ dockerImageExists ()
 # ------------
 dockerContainerIsRunning()
 {
-  if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "true" ]]; then
-    return 0
-  else
-    return 1
-  fi
+    if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "true" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
-
-
 
 # ------------
 # Check if docker container exists (regardless whether it is running or not)
@@ -452,14 +423,12 @@ dockerContainerIsRunning()
 # ------------
 dockerContainerExists()
 {
-  if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "" ]]; then
-    return 1
-  else
-    return 0
-  fi
+    if [[ "$(docker inspect -f {{.State.Running}} $1 2> /dev/null)" == "" ]]; then
+        return 1
+    else
+        return 0
+    fi
 }
-
-
 
 # ------------
 # Creates a new docker container
@@ -468,7 +437,7 @@ dockerContainerExists()
 # @version 1.0
 # @date    2017-01-26
 # ------------
-createContainer ()
+createContainer()
 {
     local containerName="$1"
 
@@ -616,8 +585,6 @@ createContainer ()
     fi
 }
 
-
-
 # ------------
 # Start a new docker container
 #
@@ -630,8 +597,6 @@ startContainer ()
     local containerName="$1"
     local returnCommand=$(docker start "$containerName")
 }
-
-
 
 # ------------
 # Unpause a new docker container
@@ -646,8 +611,6 @@ unpauseContainer ()
     local returnCommand=$(docker unpause "$containerName")
 }
 
-
-
 # ------------
 # Stop a new docker container
 #
@@ -661,5 +624,41 @@ stopContainer ()
     local returnCommand=$(docker stop "$containerName")
 }
 
+# ------------
+# Execute given command locally or on docker applience.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+executeLocallyOrOnDocker()
+{
+    local command="$1"
+    local dockerName="$2"
 
+    if [ "$dockerName" != "" ]; then
+        docker exec -it "$dockerName" sh -c "$command"
+
+        local lastExitCode=$?
+    else
+        sh -c "$command"
+
+        local lastExitCode=$?
+    fi
+
+    return $lastExitCode
+}
+
+# ------------
+# Check if file exists. Locally or on docker applience.
+#
+# @author  Björn Hempel  <bjoern@hempel.li>
+# @version 1.0 (2017-05-14)
+# ------------
+fileExistsLocallyOrOnDocker()
+{
+    local file="$1"
+    local dockerName="$2"
+
+    return $(executeLocallyOrOnDocker "[ -f \"$file\" ] || exit 1" "$dockerName")
+}
 

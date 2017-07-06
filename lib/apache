@@ -1,0 +1,145 @@
+#!/bin/bash
+
+# ------------
+# Tries to extract the complete virtual host block
+# in given file $file on line $lineFrom. The function
+# also replaces include commands with the content of
+# the that include file. Relative include paths will
+# be extended with given $serverRoot path.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-12)
+# ------------
+getVirtualHost()
+{
+    shopt -s nocasematch
+
+    local        file="$1"
+    local    lineFrom=$2
+    local matchString='</VirtualHost>'
+    local  serverRoot="$3"
+    local  dockerName="$4"
+
+    local content=$(getContentFromLineToMatch "$file" $lineFrom "$matchString" "$dockerName")
+    local lastStatus=$?
+
+    # no content found
+    if [ $lastStatus -gt 0 ]; then
+        echo -n "" && return $lastStatus
+    fi
+
+    # replace all "include paths"
+    while [[ "$content" =~ (^|$'\n')([[:space:]]*)(include[[:space:]]+)([a-z0-9_/.-]+) ]]; do
+        local fullstring="${BASH_REMATCH[3]}${BASH_REMATCH[4]}"
+        local includePath="$serverRoot/${BASH_REMATCH[4]}"
+
+        if [ "$dockerName" != "" ]; then
+            local includeContent=$(docker exec -it $dockerName cat "$includePath")
+        else
+            local includeContent=$(cat "$includePath")
+        fi
+
+        content=$(echo "${content//$fullstring/$includeContent}")
+    done
+
+    echo "$content"
+    return 0
+}
+
+# ------------
+# Tries to extracts the target (document root, proxy target, redirect, etc)
+# from given virtual config block in given $file on line $lineFrom.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getTargetFromVirtualHostFile()
+{
+    shopt -s nocasematch
+
+    local       file="$1"
+    local   lineFrom=$2
+    local serverRoot="$3"
+    local dockerName="$4"
+
+    local virtualHost=$(getVirtualHost "$file" $lineFrom "$serverRoot" "$dockerName")
+
+    getTargetFromVirtualHost "$virtualHost"
+
+    local lastStatus=$?
+
+    return $lastStatus
+}
+
+# ------------
+# Tries to extracts the target (document root, proxy target, redirect, etc)
+# from the given virtual host block.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-23)
+# ------------
+getTargetFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local virtualHost="$1"
+
+    local documentRoot=$(echo "$virtualHost" | grep -i "DocumentRoot" | head -n 1)
+    local proxyPass=$(echo "$virtualHost" | grep -i "ProxyPass[ $'\t']" | head -n 1)
+    local rewriteRule=$(echo "$virtualHost" | grep -i "RewriteRule" | grep 301 | head -n 1)
+
+    if [ "$documentRoot" != "" ]; then
+        if [[ "$documentRoot" =~ ([\t ]*DocumentRoot[\t ]+)([a-z0-9/.-]+) ]]; then
+            echo "file://${BASH_REMATCH[2]}"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    if [ "$proxyPass" != "" ]; then
+        if [[ "$proxyPass" =~ ([\t ]*ProxyPass[\t ]+[a-z0-9/.-]+[\t ]+)([a-z0-9/.:-]+) ]]; then
+            echo "${BASH_REMATCH[2]}"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    if [ "$rewriteRule" != "" ]; then
+        local uri=$(echo "$rewriteRule" | awk '{print $3}')
+
+        if [ "$uri" != "" ]; then
+            echo "$uri"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    return 1
+}
+
+# ------------
+# Tries to get the name from the project.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-05-29)
+# ------------
+getProjectNameFromVirtualHost()
+{
+    shopt -s nocasematch
+
+    local virtualHost="$1"
+    local nameName="name"
+
+    local name=$(echo "$virtualHost" | grep "^#\([[:space:]]\)\+name:" | head -n1 | sed "s/^#[ ]\+name:[ ]\+//i")
+
+    if [ "$name" == "" ]; then
+        return 1
+    fi
+
+    echo "$name"
+    return 0
+}
+
