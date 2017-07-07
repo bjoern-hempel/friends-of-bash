@@ -353,7 +353,7 @@ version()
         fi
     fi
 
-    local version=$(getRepositoryVersion "$pathRoot")
+    local version=$(getRepositoryVersion "$pathRoot" $SHORT_OUTPUT)
 
     echo "$version"
 }

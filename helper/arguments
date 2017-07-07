@@ -11,6 +11,7 @@ EMAIL="bjoern@hempel.li"
 
 # initial values
 FORCE_UPDATE=false
+SHORT_OUTPUT=false
 
 # declare parameter list array
 PARAMETERS=()
@@ -26,6 +27,12 @@ while [[ $# > 0 ]]; do
         # help:
         -y|--yes)
             FORCE_UPDATE=true
+            ;;
+
+        # help:  -s,    --short                   Try to shorten the output.
+        # help:
+        -s|--short)
+            SHORT_OUTPUT=true
             ;;
 
         # help:  -h,    --help                    Shows this help.
