@@ -345,12 +345,15 @@ version()
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
 
+    # check the given name
     if [ "$name" != "" ]; then
         pathRoot="$friendsOfBashCollectionPoint/$name"
 
         if [ ! -d "$pathRoot/.git" ]; then
             echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
         fi
+    else
+        name=$(basename "$pathRoot")
     fi
 
     if $REMOTE_CHECK; then
