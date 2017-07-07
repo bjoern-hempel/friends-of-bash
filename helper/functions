@@ -360,6 +360,8 @@ version()
         eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
         [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
 
+        local apiUrl=$(convertRepositoryUrlToApiUrl "${repositoryValues[git]}")
+
         local version=$(getLastTagByGivenRepository "${repositoryValues[git]}")
 
         if ! $SHORT_OUTPUT; then

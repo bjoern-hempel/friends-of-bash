@@ -73,15 +73,45 @@ getLastTagByGivenRepository()
     local gitRepo="$1"
     local filter="$2"
 
-    local tagResult=$(git ls-remote -t "$gitRepo")
+    local lastStatus=0
+    local tagResult=""
 
-    local tagName=$(getLastTagByGivenList "$tagResult" "$filter")
+    tagResult=$(git ls-remote -t "$gitRepo" 2>/dev/null)
+    lastStatus=$?
+
+    if [ $lastStatus -gt 0 ]; then
+        local apiUrl=$(convertRepositoryUrlToApiUrl "${repositoryValues[git]}")"/tags"
+        local tagName=$(curl --silent "$apiUrl" | jq -r .[0].name)
+    else
+        local tagName=$(getLastTagByGivenList "$tagResult" "$filter")
+    fi
 
     if [ "$tagName" == "" ]; then
         echo "v0.0.0"
+        return 0
     fi
 
     echo "$tagName"
+    return 0
+}
+
+# ------------
+# Converts the given repository url to api url.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-07-08)
+# ------------
+convertRepositoryUrlToApiUrl()
+{
+    local gitRepo="$1"
+
+    if [[ "$gitRepo" =~ git@github.com:([^\.]+)\.git ]]; then
+        echo -n "https://api.github.com/repos/${BASH_REMATCH[1]}"
+        return 0
+    fi
+
+    echo -n ""
+    return 1
 }
 
 # ------------
