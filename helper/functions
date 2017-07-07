@@ -353,7 +353,18 @@ version()
         fi
     fi
 
-    local version=$(getRepositoryVersion "$pathRoot" $SHORT_OUTPUT)
+    if $REMOTE_CHECK; then
+        eval "declare -A repositoryValues="$(getRepositoryValues "$pathRoot")
+        [ $? -gt 0 ] && (>&2 echo "→ abort") && exit
+
+        local version=$(getLastTagByGivenRepository "${repositoryValues[git]}")
+
+        if ! $SHORT_OUTPUT; then
+            version="$name/$version"
+        fi
+    else
+        local version=$(getRepositoryVersion "$pathRoot" $SHORT_OUTPUT)
+    fi
 
     echo "$version"
 }

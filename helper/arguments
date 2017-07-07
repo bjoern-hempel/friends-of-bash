@@ -12,6 +12,7 @@ EMAIL="bjoern@hempel.li"
 # initial values
 FORCE_UPDATE=false
 SHORT_OUTPUT=false
+REMOTE_CHECK=false
 
 # declare parameter list array
 PARAMETERS=()
@@ -33,6 +34,12 @@ while [[ $# > 0 ]]; do
         # help:
         -s|--short)
             SHORT_OUTPUT=true
+            ;;
+
+        # help:  -r,    --remote                  Do a remote check.
+        # help:
+        -r|--remote)
+            REMOTE_CHECK=true
             ;;
 
         # help:  -h,    --help                    Shows this help.
