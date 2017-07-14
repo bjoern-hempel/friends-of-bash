@@ -158,7 +158,7 @@ isCertificateValid()
             outputContent \
                 "certificates.${domainUnderlined}.valid" \
                 "passed" \
-                "The certificate from the domain \"$domain\" is valid until \"$COLOR_GREEN$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+                "The certificate from the domain \"$domain\" is valid until \"$COLOR_GREEN$COLOR_BOLD$validUntilFormated$COLOR_NORM\" (still $differenceValidUntilDays days)."
         fi
         return 0
     fi
@@ -169,17 +169,19 @@ isCertificateValid()
             outputContent \
                 "certificates.${domainUnderlined}.valid" \
                 "warning" \
-                "The certificate from the domain \"$domain\" is only valid until \"$COLOR_YELLOW$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+                "The certificate from the domain \"$domain\" is only valid until \"$COLOR_YELLOW$COLOR_BOLD$validUntilFormated$COLOR_NORM\" (still $differenceValidUntilDays days)."
         fi
         return 0;
     fi
 
     # certificate is expired.
     if $printStatus; then
+        local sinceDifferenceValidUntilDays=$((-1*$differenceValidUntilDays))
+
         outputContent \
             "certificates.${domainUnderlined}.valid" \
             "failed" \
-            "The certificate from the domain \"$domain\" is not invalid. Expired at \"$COLOR_RED$COLOR_BOLD$validUntilFormated$COLOR_NORM\"."
+            "The certificate from the domain \"$domain\" is not invalid. Expired at \"$COLOR_RED$COLOR_BOLD$validUntilFormated$COLOR_NORM\" (since $sinceDifferenceValidUntilDays days)."
     fi
     return 1
 }
