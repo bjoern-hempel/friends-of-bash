@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # ------------
-# A install script to install this framework into the /opt directory.
+# Friends of Ba$h. A collection of useful bash functions. Easy to include in your bash scripts.
 #
 # @author    Björn Hempel <bjoern@hempel.li>
-# @version   1.0 (2017-05-16)
+# @version   v0.0.45 (2017-07-16)
 #
 # @copyright MIT License
 # @copyright
