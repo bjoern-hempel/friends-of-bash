@@ -31,6 +31,16 @@
 # @copyright Written by Björn Hempel <bjoern@hempel.li>.
 # ------------
 
+# trap ctrl-c and call ctrl_c()
+trap ctrlC INT
+
+# trap ctrl-c function
+function ctrlC()
+{
+    echo && log 'info' "Script was cancelled by user (ctrl-c)."
+    exit 0
+}
+
 # some user definable constants
 TARGET_FOLDER="/opt/friends-of-bash"
 EXECUTIVE_FOLDER="/usr/local/bin"
