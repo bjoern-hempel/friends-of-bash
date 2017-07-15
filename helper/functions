@@ -459,15 +459,35 @@ updateVersion()
 
     local friendsOfBashCollectionPoint=$(dirname "$pathRoot")
 
-    if [ "$name" != "" ]; then
-        pathRoot="$friendsOfBashCollectionPoint/$name"
 
-        if [ ! -d "$pathRoot/.git" ]; then
-            echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
-        fi
-    else
-        name="friends-of-bash"
+    case $name in
+        # . given -> use current folder
+        .)
+            pathRoot=$(pwd)
+            ;;
+
+        # empty string given -> use friends-of-bash path
+        "")
+            pathRoot="$TARGET_FOLDER/friends-of-bash"
+            ;;
+
+        # all the other stuff
+        *)
+            if [[ "$name" =~ / ]]; then
+                pathRoot=$(realpath -m "$name")
+            else
+                pathRoot="$TARGET_FOLDER/$name"
+            fi
+            ;;
+    esac
+
+    # check the given path
+    if [ ! -d "$pathRoot/.git" ]; then
+        echo "The path \"$pathRoot\" is not a repository path. Abort." && exit
     fi
+
+    # extract the name of the given path
+    name=$(basename "$pathRoot")
 
     local      currentTag=$(getCurrentTagFromGivenPath "$pathRoot")
     local    nextMajorTag=$(getNextTagFromGivenPath "$pathRoot" 0)
