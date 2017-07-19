@@ -49,6 +49,12 @@ user$ /usr/local/bin/friends-of-bash update
 $ friends-of-bash update
 ```
 
+### 1.5) Show os name and version
+
+```
+$ friends-of-bash osName
+```
+
 ## 2.) Manage other repositories
 
 ### 1.1) Installation & show version

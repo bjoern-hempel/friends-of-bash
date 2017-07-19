@@ -579,3 +579,14 @@ showVersion()
     getRepositoryVersion "$pathRoot"
 }
 
+# ------------
+# Shows the os name of the current system.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-07-19)
+# ------------
+osName()
+{
+    echo $(getOSName)
+}
+

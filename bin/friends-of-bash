@@ -109,6 +109,10 @@ case $executionType in
         updateVersion "$pathRoot" "$executionName"
         ;;
 
+    osName)
+        osName
+        ;;
+
     # other character
     *)
         echo 'unknown execution type'
