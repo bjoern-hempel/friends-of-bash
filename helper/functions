@@ -328,7 +328,11 @@ list()
 
         local repositoryVersion=$(getRepositoryVersion "$directoryRepository")
 
-        echo "$nameRepository - $repositoryVersion"
+        if $SHORT_OUTPUT; then
+            echo "$repositoryVersion"
+        else
+            echo "$nameRepository - $repositoryVersion"
+        fi
     done
 }
 
