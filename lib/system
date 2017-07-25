@@ -158,6 +158,10 @@ getIpAddress()
             continue
         fi
 
+        if [[ "$networkInterface" =~ ^br- ]]; then
+            continue
+        fi
+
         echo "$ip" && return 0
     done
 
