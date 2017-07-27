@@ -214,15 +214,15 @@ This will set the current version number v0.0.51 to v0.0.52. Do you want to cont
 
 #### 2.5.2) Increase the revision number
 
-You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
 
 #### 2.5.3) Increase the minor number
 
-You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
 
 #### 2.5.4) Increase the major number
 
-You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
 
 ## 3.) Usage
 
