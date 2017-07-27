@@ -19,11 +19,18 @@ friends-of-bash/v0.0.11
 ```
 user$ friends-of-bash --help
 
-Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
+"friends of bash": A bash function library (v0.0.51) by Björn Hempel <bjoern@hempel.li>.
+
+Usage: /usr/local/bin/friends-of-bash [options...] {install|status|update|version|list|updateAvailable|osName}
+ -y,    --yes                     Auto yes. Don't answer to update questions.
+
+ -s,    --short                   Try to shorten the output.
+
+ -r,    --remote                  Do a remote check.
+
  -h,    --help                    Shows this help.
 
  -v,    --version                 Shows the version number.
-
 ```
 
 ### 1.3) Show status
@@ -74,8 +81,31 @@ service-checker - service-checker/v0.0.18 - application is up to date (Attention
 
 ### 1.4) Update library
 
+#### 1.4.1) Single application
+
+##### 1.4.1.1) Example I
+
 ```
-$ friends-of-bash update
+user$ friends-of-bash update apache-host-viewer
+```
+
+##### 1.4.1.2) Example II
+
+```
+user$ cd /opt/friends-of-bash/apache-host-viewer
+user$ friends-of-bash update .
+```
+
+#### 1.4.2) All applications
+
+```
+user$ friends-of-bash update all
+```
+
+#### 1.4.3) Don't ask. Update immediately (`-y`)
+
+```
+user$ friends-of-bash update all -y
 ```
 
 ### 1.5) Show os name and version
