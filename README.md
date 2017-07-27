@@ -37,6 +37,8 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|status|update|versio
 
 #### 1.3.1) Single application
 
+##### 1.3.1.1) Example I
+
 ```
 user$ friends-of-bash status 
 
@@ -51,6 +53,8 @@ Available changeset:           2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
 
 Your "/opt/friends-of-bash/friends-of-bash" version is up to date. Nothing to do here.
 ```
+
+##### 1.3.1.2) Example II
 
 ```
 user$ friends-of-bash status apache-host-viewer
