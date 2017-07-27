@@ -196,6 +196,8 @@ user$ friends-of-bash update all -y
 
 #### 2.5.1) Increase the revision version number in general
 
+This technique works with each friends-of-bash application.
+
 ```
 user$ cd /opt/friends-of-bash/friends-of-bash
 user$ friends-of-bash updateVersion .
