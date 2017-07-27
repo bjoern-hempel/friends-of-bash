@@ -173,7 +173,7 @@ service-checker - service-checker/v0.0.18 - application is up to date (Attention
 user$ friends-of-bash update apache-host-viewer
 ```
 
-##### 2.4.2) Individual (Example II)
+#### 2.4.2) Individual (Example II)
 
 ```
 user$ cd /opt/friends-of-bash/apache-host-viewer
@@ -191,8 +191,6 @@ user$ friends-of-bash update all
 ```
 user$ friends-of-bash update all -y
 ```
-
-
 
 ### 2.5) Update version number
 
