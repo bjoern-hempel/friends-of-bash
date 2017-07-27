@@ -185,8 +185,7 @@ getServerNameFromProjectPath()
 
         if [[ "$targetUri" =~ ^file://(.+) ]]; then
             targetUri="${BASH_REMATCH[1]}"
-
-            if [ "$targetUri" == "$projectPath" ]; then
+            if [[ "$targetUri" =~ ^$projectPath ]]; then
                 servername=$(getServerNameFromVirtualHost "$virtualHost")
                 lastStatus=$?
 
