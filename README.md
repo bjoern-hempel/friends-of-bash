@@ -205,7 +205,7 @@ name:            friends-of-bash
 directory:       /opt/friends-of-bash/friends-of-bash
 current version: v0.0.51
 
-Which new version number you do want to use? (1) - v1.0.0, (2) - v0.1.0 or (3) v0.0.52
+Which new version number do you want to use? (1) - v1.0.0, (2) - v0.1.0 or (3) v0.0.52
 
 Choose (1), (2) or (3): 3
 
