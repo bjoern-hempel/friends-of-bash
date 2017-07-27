@@ -50,7 +50,7 @@ Available changeset:           2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
 Your "/opt/friends-of-bash/friends-of-bash" version is up to date. Nothing to do here.
 ```
 
-### 1.4) Update friends-of-bash applications
+### 1.4) Update friends-of-bash library
 
 ```
 user$ friends-of-bash update
