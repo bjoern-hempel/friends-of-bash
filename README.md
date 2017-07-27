@@ -194,23 +194,37 @@ user$ friends-of-bash update all -y
 
 ### 2.5) Update version number
 
-#### 2.5.1) Increase the revision number
+#### 2.5.1) Increase the revision version number in general
 
 ```
-user$ friends-of-bash updateVersion apache-host-viewer
+user$ cd /opt/friends-of-bash/friends-of-bash
+user$ friends-of-bash updateVersion .
+name:            friends-of-bash
+directory:       /opt/friends-of-bash/friends-of-bash
+current version: v0.0.51
+
+Which new version number you want to use? (1) - v1.0.0, (2) - v0.1.0 or (3) v0.0.52
+
+Choose (1), (2) or (3): 3
+
+This will set the current version number v0.0.51 to v0.0.52. Do you want to continue? Type (y)es or (no): y
 ```
 
-#### 2.5.2) Increase the minor number
+#### 2.5.2) Increase the revision number
 
-TODO
+You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
 
-#### 2.5.3) Increase the major number
+#### 2.5.3) Increase the minor number
 
-TODO
+You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
+
+#### 2.5.4) Increase the major number
+
+You will ask for. Please have a look at: "2.5.1) Increase the revision version number in general" (`friends-of-bash updateVersion`)
 
 ## 3.) Usage
 
-TODO: Describe the general usage of this library here.
+TODO: Describe the general usage of this library here. A basic usage application you will find here: https://github.com/bjoern-hempel/hello-world
 
 ## 4.) Libraries
 
