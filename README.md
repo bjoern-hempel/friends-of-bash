@@ -83,7 +83,7 @@ project-analyser - project-analyser/v0.0.10 - application is up to date (Attenti
 service-checker - service-checker/v0.0.18 - application is up to date (Attention: 1 changed files found!)
 ```
 
-### 1.4) Update library
+### 1.4) Update friends-of-bash applications
 
 #### 1.4.1) Single application
 
