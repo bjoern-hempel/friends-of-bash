@@ -502,7 +502,7 @@ updateVersion()
     echo "directory:       $pathRoot"
     echo "current version: $currentTag"
     echo
-    echo "Which new version number you want to use? (1) - $nextMajorTag, (2) - $nextMinorTag or (3) $nextRevisionTag"
+    echo "Which new version number do you want to use? (1) - $nextMajorTag, (2) - $nextMinorTag or (3) $nextRevisionTag"
     echo
 
     while true; do
