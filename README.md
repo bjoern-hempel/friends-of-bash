@@ -11,7 +11,7 @@ user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd f
 user$ sudo -E bin/install
 user$ cd .. && rm -rf friends-of-bash
 user$ friends-of-bash --version
-friends-of-bash/v0.0.11
+friends-of-bash/v0.0.51
 ```
 
 ### 1.2) Show help
