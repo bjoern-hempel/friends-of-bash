@@ -35,12 +35,8 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|status|update|versio
 
 ### 1.3) Show status
 
-#### 1.3.1) Single application
-
-##### 1.3.1.1) Example I
-
 ```
-user$ friends-of-bash status 
+user$ friends-of-bash status
 
 friends-of-bash
 ---------------
@@ -54,73 +50,21 @@ Available changeset:           2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
 Your "/opt/friends-of-bash/friends-of-bash" version is up to date. Nothing to do here.
 ```
 
-##### 1.3.1.2) Example II
-
-```
-user$ friends-of-bash status apache-host-viewer
-
-apache-host-viewer
-------------------
-
-Currently installed version:   v0.0.40
-Available version:             v0.0.40
-
-Currently installed changeset: 674c4a6854c45d73bdfa1f43a077f1b5d538449f
-Available changeset:           674c4a6854c45d73bdfa1f43a077f1b5d538449f
-
-Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to do here.
-```
-
-#### 1.3.2) All applications
-
-```
-user$ friends-of-bash status all
-apache-host-viewer - apache-host-viewer/v0.0.39 - new version is available (v0.0.40)
-backup-mysql - backup-mysql/v0.0.3 - application is up to date
-friends-of-bash - friends-of-bash/v0.0.51 - application is up to date
-hello-world - hello-world/v1.0.8 - application is up to date
-project-analyser - project-analyser/v0.0.10 - application is up to date (Attention: 3 changed files found!)
-service-checker - service-checker/v0.0.18 - application is up to date (Attention: 1 changed files found!)
-```
-
 ### 1.4) Update friends-of-bash applications
 
-#### 1.4.1) Single application
-
-##### 1.4.1.1) Example I
-
 ```
-user$ friends-of-bash update apache-host-viewer
-```
-
-##### 1.4.1.2) Example II
-
-```
-user$ cd /opt/friends-of-bash/apache-host-viewer
-user$ friends-of-bash update .
-```
-
-#### 1.4.2) All applications
-
-```
-user$ friends-of-bash update all
-```
-
-#### 1.4.3) Don't ask. Update immediately (`-y`)
-
-```
-user$ friends-of-bash update all -y
+user$ friends-of-bash update
 ```
 
 ### 1.5) Show os name and version
 
 ```
-$ friends-of-bash osName
+user$ friends-of-bash osName
 ```
 
 ## 2.) Manage other repositories
 
-### 1.1) Installation & show version
+### 2.1) Installation & show version
 
 Use the parameter -E to pass through your ssh private key while doing a `sudo git clone`:
 
@@ -164,17 +108,35 @@ user$ apache-host-viewer --version
 apache-host-viewer/v0.0.2
 ```
 
-### 1.2) list all packages installed via `friends-of-bash install`
+### 2.2) list all packages installed via `friends-of-bash install`
+
+#### 2.2.1) Full output
 
 ```
 user$ friends-of-bash list
-apache-host-viewer - apache-host-viewer/v0.0.2
-backup-mysql - backup-mysql/v0.0.1
-friends-of-bash - friends-of-bash/v0.0.14
-hello-world - hello-world/v1.0.0
+apache-host-viewer - apache-host-viewer/v0.0.40
+backup-mysql - backup-mysql/v0.0.3
+friends-of-bash - friends-of-bash/v0.0.51
+hello-world - hello-world/v1.0.8
+project-analyser - project-analyser/v0.0.10
+service-checker - service-checker/v0.0.18
 ```
 
-### 1.3) Show status
+#### 2.2.2) Short output
+
+```
+user$ friends-of-bash list --short
+apache-host-viewer/v0.0.40
+backup-mysql/v0.0.3
+friends-of-bash/v0.0.51
+hello-world/v1.0.8
+project-analyser/v0.0.10
+service-checker/v0.0.18
+```
+
+### 2.3) Show status
+
+#### 2.3.1) From a single application
 
 ```
 user$ friends-of-bash status apache-host-viewer
@@ -182,42 +144,69 @@ user$ friends-of-bash status apache-host-viewer
 apache-host-viewer
 ------------------
 
-Currently installed version:   v0.0.2
-Available version:             v0.0.2
+Currently installed version:   v0.0.40
+Available version:             v0.0.40
 
-Currently installed changeset: dcb2217b4081bc1124568545ddd6f58e76325191
-Available changeset:           dcb2217b4081bc1124568545ddd6f58e76325191
+Currently installed changeset: 674c4a6854c45d73bdfa1f43a077f1b5d538449f
+Available changeset:           674c4a6854c45d73bdfa1f43a077f1b5d538449f
 
 Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to do here.
 ```
 
-### 1.4) Update library
+#### 2.3.2) From all applications
 
-#### 1.4.1) Individual
+```
+user$ friends-of-bash status all
+apache-host-viewer - apache-host-viewer/v0.0.39 - new version is available (v0.0.40)
+backup-mysql - backup-mysql/v0.0.3 - application is up to date
+friends-of-bash - friends-of-bash/v0.0.51 - application is up to date
+hello-world - hello-world/v1.0.8 - application is up to date
+project-analyser - project-analyser/v0.0.10 - application is up to date (Attention: 3 changed files found!)
+service-checker - service-checker/v0.0.18 - application is up to date (Attention: 1 changed files found!)
+```
+
+### 2.4) Update friends-of-bash application
+
+#### 2.4.1) Individual (Example I)
 
 ```
 user$ friends-of-bash update apache-host-viewer
 ```
 
-#### 1.4.2) All libraries
+##### 2.4.2) Individual (Example II)
+
+```
+user$ cd /opt/friends-of-bash/apache-host-viewer
+user$ friends-of-bash update .
+```
+
+#### 2.4.3) Update all applications
 
 ```
 user$ friends-of-bash update all
 ```
 
-### 1.5) Update version number
+#### 2.4.4) Don't ask. Update immediately (`-y`)
 
-#### 1.5.1) Increase the revision number
+```
+user$ friends-of-bash update all -y
+```
+
+
+
+### 2.5) Update version number
+
+#### 2.5.1) Increase the revision number
 
 ```
 user$ friends-of-bash updateVersion apache-host-viewer
 ```
 
-#### 1.5.2) Increase the minor number
+#### 2.5.2) Increase the minor number
 
 TODO
 
-#### 1.5.3) Increase the major number
+#### 2.5.3) Increase the major number
 
 TODO
 
