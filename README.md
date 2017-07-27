@@ -28,19 +28,48 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 
 ### 1.3) Show status
 
+#### 1.3.1) Single application
+
 ```
-user$ friends-of-bash status
+user$ friends-of-bash status 
 
 friends-of-bash
+---------------
 
-Currently installed version:   v0.0.5
-Available version:             v0.0.6
+Currently installed version:   v0.0.51
+Available version:             v0.0.51
 
-Currently installed changeset: 04b96992e3623e1270496fa04d0fe6dc6cc9a9f2
-Available changeset:           67f7aade0275f01037b531764b1cc2e75b63ce45
+Currently installed changeset: 2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
+Available changeset:           2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
 
-Your friends of bash library version is not up to date. Please update with:
-user$ /usr/local/bin/friends-of-bash update
+Your "/opt/friends-of-bash/friends-of-bash" version is up to date. Nothing to do here.
+```
+
+```
+user$ friends-of-bash status apache-host-viewer
+
+apache-host-viewer
+------------------
+
+Currently installed version:   v0.0.40
+Available version:             v0.0.40
+
+Currently installed changeset: 674c4a6854c45d73bdfa1f43a077f1b5d538449f
+Available changeset:           674c4a6854c45d73bdfa1f43a077f1b5d538449f
+
+Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to do here.
+```
+
+#### 1.3.2) All applications
+
+```
+user$ friends-of-bash status all
+apache-host-viewer - apache-host-viewer/v0.0.39 - new version is available (v0.0.40)
+backup-mysql - backup-mysql/v0.0.3 - application is up to date
+friends-of-bash - friends-of-bash/v0.0.51 - application is up to date
+hello-world - hello-world/v1.0.8 - application is up to date
+project-analyser - project-analyser/v0.0.10 - application is up to date (Attention: 3 changed files found!)
+service-checker - service-checker/v0.0.18 - application is up to date (Attention: 1 changed files found!)
 ```
 
 ### 1.4) Update library
