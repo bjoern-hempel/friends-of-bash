@@ -226,7 +226,7 @@ You will ask for. Please have a look at: "**2.5.1) Increase the revision version
 
 ## 3.) Usage
 
-TODO: Describe the general usage of this library here. A basic usage application you will find here: https://github.com/bjoern-hempel/hello-world
+TODO: Describe the general usage of this library here. A basic usage application using this libraries you will find here: https://github.com/bjoern-hempel/hello-world
 
 ## 4.) Libraries
 
