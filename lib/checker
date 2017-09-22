@@ -48,7 +48,7 @@ isHttpStatusCodeCheck()
     local startFormat="$COLOR_CYAN$COLOR_BOLD"
     local urlFormatted="$startFormat$url$COLOR_NORM"
 
-    read returnedStatusCode comparison < <(getHttpStatusCodeFromUrl "$url")
+    IFS='×' read returnedStatusCode comparison <<<"$(getHttpStatusCodeFromUrl "$url")"
     local comparisonFormated="$startFormat$comparison$COLOR_NORM"
 
     # split status code

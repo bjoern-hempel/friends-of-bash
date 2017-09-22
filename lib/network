@@ -25,7 +25,7 @@ getRedirectUrl()
     local  sv=""
 
     while true; do
-        read sc sv < <(getHttpStatusCodeFromUrl "$url")
+        IFS='×' read sc sv <<<"$(getHttpStatusCodeFromUrl "$url")"
 
         local redirect=false
 
@@ -67,17 +67,19 @@ getHttpStatusCodeFromUrl()
             comparison=$(curl -s "$1")
             ;;
         301)
-            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
+            # comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
+            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed -e 's/[[:space:]]*$//')
             ;;
         302)
-            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
+            # comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed 's/\/[^a-z0-9\.\-\:]*$//g' | sed -e 's/[[:space:]]*$//')
+            comparison=$(echo "$header" | grep "Location:" | awk '{print $2}' | sed -e 's/[[:space:]]*$//')
             ;;
         401)
             comparison=$(echo "$header" | grep 'WWW-Authenticate' | grep -oP 'realm="\K[^"]+')
             ;;
     esac
 
-    echo -e "$httpCode" "$comparison"
+    echo "$httpCode×$comparison"
 }
 
 # ------------
@@ -91,7 +93,7 @@ hasHttpStatusCodeFromUrl()
     url="$1"
     statusCodes="$2"
 
-    read returnedStatusCode comparison < <(getHttpStatusCodeFromUrl "$url")
+    IFS='×' read returnedStatusCode comparison <<<"$(getHttpStatusCodeFromUrl "$url")"
 
     IFS=',' read -ra statusCodeArray <<< "$statusCodes"
     for statusCode in "${statusCodeArray[@]}"; do
