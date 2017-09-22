@@ -74,6 +74,14 @@ sendErrorMailsTimeFiltered()
         fi
     fi
 
+    # check required applications
+    if [ "$relayStrategyServer" == "direct" ]; then
+        if ! applicationExists "mail"; then
+            outputContentLog "info" "The application mail is not installed. Please install with: user$ sudo apt install mailutils"
+            return 1
+        fi
+    fi
+
     for recipient in "${recipientArray[@]}"; do
         local fullNamespace="${namespace}.error:${recipient}"
 
