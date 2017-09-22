@@ -21,7 +21,7 @@ PARAMETERS=()
 # help:
 # help: "friends of bash": A bash function library (%version%) by %author% <%email%>.
 # help:
-# help: Usage: %scriptname% [options...] {install|status|update|version|list|updateAvailable|osName}
+# help: Usage: %scriptname% [options...] {install|status|update|version|list|updateAvailable|updateVersion|osName}
 while [[ $# > 0 ]]; do
     case "$1" in
         # help:  -y,    --yes                     Auto yes. Don't answer to update questions.
