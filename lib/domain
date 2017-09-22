@@ -82,3 +82,18 @@ sortDomainList()
     echo "$1" | sort -u | sed 's~\(http[s]*://\)~\1 ~' | sort -k2 | sed 's~:// ~://~'
 }
 
+# --------
+# Get the last redirected url.
+#
+# @author  Björn Hempel <bjoern@hempel.li>
+# @version 1.0 (2017-06-12)
+# --------
+getLastRedirectedUrl()
+{
+    local url="$1"
+
+    local redirectedUrl=$(curl -Ls -o /dev/null -w %{url_effective} "$url")
+
+    echo "$redirectedUrl"
+}
+

@@ -11,7 +11,7 @@ user$ cd ~ && git clone git@github.com:bjoern-hempel/friends-of-bash.git && cd f
 user$ sudo -E bin/install
 user$ cd .. && rm -rf friends-of-bash
 user$ friends-of-bash --version
-friends-of-bash/v0.0.11
+friends-of-bash/v0.0.51
 ```
 
 ### 1.2) Show help
@@ -19,11 +19,18 @@ friends-of-bash/v0.0.11
 ```
 user$ friends-of-bash --help
 
-Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
+"friends of bash": A bash function library (v0.0.51) by Björn Hempel <bjoern@hempel.li>.
+
+Usage: /usr/local/bin/friends-of-bash [options...] {install|status|update|version|list|updateAvailable|osName}
+ -y,    --yes                     Auto yes. Don't answer to update questions.
+
+ -s,    --short                   Try to shorten the output.
+
+ -r,    --remote                  Do a remote check.
+
  -h,    --help                    Shows this help.
 
  -v,    --version                 Shows the version number.
-
 ```
 
 ### 1.3) Show status
@@ -32,32 +39,32 @@ Usage: /usr/local/bin/friends-of-bash [options...] {install|update|status}
 user$ friends-of-bash status
 
 friends-of-bash
+---------------
 
-Currently installed version:   v0.0.5
-Available version:             v0.0.6
+Currently installed version:   v0.0.51
+Available version:             v0.0.51
 
-Currently installed changeset: 04b96992e3623e1270496fa04d0fe6dc6cc9a9f2
-Available changeset:           67f7aade0275f01037b531764b1cc2e75b63ce45
+Currently installed changeset: 2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
+Available changeset:           2e86d582411c2df92ddefb0acd41e0bc5cd0a01b
 
-Your friends of bash library version is not up to date. Please update with:
-user$ /usr/local/bin/friends-of-bash update
+Your "/opt/friends-of-bash/friends-of-bash" version is up to date. Nothing to do here.
 ```
 
-### 1.4) Update library
+### 1.4) Update friends-of-bash library
 
 ```
-$ friends-of-bash update
+user$ friends-of-bash update
 ```
 
 ### 1.5) Show os name and version
 
 ```
-$ friends-of-bash osName
+user$ friends-of-bash osName
 ```
 
 ## 2.) Manage other repositories
 
-### 1.1) Installation & show version
+### 2.1) Installation & show version
 
 Use the parameter -E to pass through your ssh private key while doing a `sudo git clone`:
 
@@ -101,17 +108,35 @@ user$ apache-host-viewer --version
 apache-host-viewer/v0.0.2
 ```
 
-### 1.2) list all packages installed via `friends-of-bash install`
+### 2.2) list all packages installed via `friends-of-bash install`
+
+#### 2.2.1) Full output
 
 ```
 user$ friends-of-bash list
-apache-host-viewer - apache-host-viewer/v0.0.2
-backup-mysql - backup-mysql/v0.0.1
-friends-of-bash - friends-of-bash/v0.0.14
-hello-world - hello-world/v1.0.0
+apache-host-viewer - apache-host-viewer/v0.0.40
+backup-mysql - backup-mysql/v0.0.3
+friends-of-bash - friends-of-bash/v0.0.51
+hello-world - hello-world/v1.0.8
+project-analyser - project-analyser/v0.0.10
+service-checker - service-checker/v0.0.18
 ```
 
-### 1.3) Show status
+#### 2.2.2) Short output
+
+```
+user$ friends-of-bash list --short
+apache-host-viewer/v0.0.40
+backup-mysql/v0.0.3
+friends-of-bash/v0.0.51
+hello-world/v1.0.8
+project-analyser/v0.0.10
+service-checker/v0.0.18
+```
+
+### 2.3) Show status
+
+#### 2.3.1) From a single application
 
 ```
 user$ friends-of-bash status apache-host-viewer
@@ -119,48 +144,89 @@ user$ friends-of-bash status apache-host-viewer
 apache-host-viewer
 ------------------
 
-Currently installed version:   v0.0.2
-Available version:             v0.0.2
+Currently installed version:   v0.0.40
+Available version:             v0.0.40
 
-Currently installed changeset: dcb2217b4081bc1124568545ddd6f58e76325191
-Available changeset:           dcb2217b4081bc1124568545ddd6f58e76325191
+Currently installed changeset: 674c4a6854c45d73bdfa1f43a077f1b5d538449f
+Available changeset:           674c4a6854c45d73bdfa1f43a077f1b5d538449f
 
 Your "/opt/friends-of-bash/apache-host-viewer" version is up to date. Nothing to do here.
 ```
 
-### 1.4) Update library
+#### 2.3.2) From all applications
 
-#### 1.4.1) Individual
+```
+user$ friends-of-bash status all
+apache-host-viewer - apache-host-viewer/v0.0.39 - new version is available (v0.0.40)
+backup-mysql - backup-mysql/v0.0.3 - application is up to date
+friends-of-bash - friends-of-bash/v0.0.51 - application is up to date
+hello-world - hello-world/v1.0.8 - application is up to date
+project-analyser - project-analyser/v0.0.10 - application is up to date (Attention: 3 changed files found!)
+service-checker - service-checker/v0.0.18 - application is up to date (Attention: 1 changed files found!)
+```
+
+### 2.4) Update friends-of-bash application
+
+#### 2.4.1) Individual (Example I)
 
 ```
 user$ friends-of-bash update apache-host-viewer
 ```
 
-#### 1.4.2) All libraries
+#### 2.4.2) Individual (Example II)
+
+```
+user$ cd /opt/friends-of-bash/apache-host-viewer
+user$ friends-of-bash update .
+```
+
+#### 2.4.3) Update all applications
 
 ```
 user$ friends-of-bash update all
 ```
 
-### 1.5) Update version number
-
-#### 1.5.1) Increase the revision number
+#### 2.4.4) Don't ask. Update immediately (`-y`)
 
 ```
-user$ friends-of-bash updateVersion apache-host-viewer
+user$ friends-of-bash update all -y
 ```
 
-#### 1.5.2) Increase the minor number
+### 2.5) Update version number
 
-TODO
+#### 2.5.1) Increase the revision version number in general
 
-#### 1.5.3) Increase the major number
+This technique works with each friends-of-bash application.
 
-TODO
+```
+user$ cd /opt/friends-of-bash/friends-of-bash
+user$ friends-of-bash updateVersion .
+name:            friends-of-bash
+directory:       /opt/friends-of-bash/friends-of-bash
+current version: v0.0.51
+
+Which new version number do you want to use? (1) - v1.0.0, (2) - v0.1.0 or (3) v0.0.52
+
+Choose (1), (2) or (3): 3
+
+This will set the current version number v0.0.51 to v0.0.52. Do you want to continue? Type (y)es or (no): y
+```
+
+#### 2.5.2) Increase the revision number
+
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
+
+#### 2.5.3) Increase the minor number
+
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
+
+#### 2.5.4) Increase the major number
+
+You will ask for. Please have a look at: "**2.5.1) Increase the revision version number in general**" (`friends-of-bash updateVersion`)
 
 ## 3.) Usage
 
-TODO: Describe the general usage of this library here.
+TODO: Describe the general usage of this library here. A basic usage application using this libraries you will find here: https://github.com/bjoern-hempel/hello-world
 
 ## 4.) Libraries
 

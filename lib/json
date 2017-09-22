@@ -70,4 +70,43 @@ getApacheHostViewerJson()
     return 0
 }
 
+# ------------
+# Returns a filtered json array.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-07-27)
+# ------------
+getFilteredJsonArray()
+{
+    local json="$1"
+
+    local filter="$2"
+
+    local path=${3:-.}
+
+    local filtered=$(echo "$json" | jq "[ $path[] | select($filter) ]")
+
+    echo $filtered
+}
+
+# ------------
+# Counts a given json object-array.
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-07-27)
+# ------------
+getCountOfFilteredJsonArray()
+{
+    local json="$1"
+
+    local filter="$2"
+
+    local path=${3:-.}
+
+    local filtered=$(getFilteredJsonArray "$json" "$filter" "$path")
+
+    local count=$(echo "$filtered" | jq '. | length')
+
+    echo $count
+}
 
