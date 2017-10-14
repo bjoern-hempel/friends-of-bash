@@ -1,6 +1,22 @@
 #!/bin/bash
 
+# ------------
+# Wait function
+#
+# @author  Björn Hempel
+# @version 1.0 (2017-10-14 14:32)
+# ------------
+waitSeconds ()
+{
+    local time=${1:-20}
 
+    echo -ne "$time s"
+    while [ $time -gt 0 ]; do
+        time=$((time - 1)) && sleep 1
+        echo -ne "\033[0K\r$time s"
+    done
+    echo -ne "\r          \r"
+}
 
 # ------------
 # Log function.
