@@ -40,11 +40,9 @@ getChainCertificate()
 {
     local domain="$1"
 
-    local issuer=$(getIssuer "$domain")
+    local issuerUri=$(openssl s_client -connect $domain:443 -servername $domain 2>&1 < /dev/null | sed -n '/-----BEGIN/,/-----END/p' | openssl x509 -noout -text | grep "CA Issuers" | sed 's/^.*URI://')
 
-    issuer=$(echo "$issuer" | sed 's/\//\\\//g')
-
-    local chainCert=$(openssl s_client -connect $domain:443 -showcerts -servername $domain 2>/dev/null < /dev/null | sed -n "/s:$issuer/,/-----END/p" | sed -n '/-----BEGIN/,/-----END/p')
+    local chainCert=$(curl http://cert.int-x3.letsencrypt.org/ 2>/dev/null | openssl x509 -inform der)
 
     echo "$chainCert"
 }
