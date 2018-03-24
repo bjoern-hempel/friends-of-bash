@@ -58,6 +58,12 @@ Change the shell:
 user$ chsh -s /usr/local/bin/bash
 ```
 
+```
+user$ which -a bash
+/usr/local/bin/bash
+/bin/bash
+```
+
 Restart your mac. And check the version again.
 
 ```
