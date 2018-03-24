@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ------------
 # Friends of Ba$h. A collection of useful bash functions. Easy to include in your bash scripts.
