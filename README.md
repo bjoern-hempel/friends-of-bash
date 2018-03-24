@@ -39,14 +39,7 @@ Copyright (C) 2016 Free Software Foundation, Inc.
 ...
 ```
 
-But /bin/bash will be still the old version
-
-```
-user$ /bin/bash -c 'echo $BASH_VERSION'
-3.2.57(1)-release
-```
-
-To fix this, add the new shell to the list of allowed shells:
+Add the new shell to the list of allowed shells:
 
 ```
 user$ sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
@@ -58,17 +51,12 @@ Change the shell:
 user$ chsh -s /usr/local/bin/bash
 ```
 
+Check the used shell locations:
+
 ```
 user$ which -a bash
 /usr/local/bin/bash
 /bin/bash
-```
-
-Restart your mac. And check the version again.
-
-```
-user$ /bin/bash -c 'echo $BASH_VERSION'
-3.2.57(1)-release
 ```
 
 Looks good. Now you are ready to use this library on your mac as well.
