@@ -31,6 +31,12 @@
 # @copyright Written by Björn Hempel <bjoern@hempel.li>.
 # ------------
 
+# check bash version
+if [ "${BASH_VERSINFO}" -lt 4 ]; then
+    echo "This library needs a bash version at least 4 or higher. Your version number: $BASH_VERSION. Please update your bash version."
+    exit
+fi
+
 # some calculable configs before
 if [ -h "${BASH_SOURCE[0]}" ]; then
     realScriptname=$(readlink "${BASH_SOURCE[0]}")
