@@ -318,13 +318,19 @@ getRepositoryNameFromGivenRepository()
 # ------------
 getNameAuthorFromGivenRepository()
 {
-    local authorName=$(echo "$1" | grep -oP '^[^:]+:\K[^/]+')
+    local authorName=$(echo "$1" | grep -oP '^[^:]+:\K[^/]+' 2>/dev/null)
+    local allowEmpty=${2:-true}
 
     if [ "$authorName" != "" ]; then
         echo -n "$authorName"
         return 0
     fi
 
+    if $allowEmpty; then
+        echo -n ""
+        return 0
+    fi
+                                                                                                                                                                                                                  
     >&2 echo "Error: no author name was found"
     return 1
 }
